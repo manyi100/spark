@@ -20,12 +20,14 @@ package org.apache.spark.api.r
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, DataInputStream, DataOutputStream}
 
 import scala.collection.mutable.HashMap
+import scala.language.existentials
 
 import io.netty.channel.ChannelHandler.Sharable
 import io.netty.channel.{ChannelHandlerContext, SimpleChannelInboundHandler}
 
 import org.apache.spark.Logging
 import org.apache.spark.api.r.SerDe._
+import org.apache.spark.util.Utils
 
 /**
  * Handler for RBackend
@@ -67,8 +69,11 @@ private[r] class RBackendHandler(server: RBackend)
             case e: Exception =>
               logError(s"Removing $objId failed", e)
               writeInt(dos, -1)
+              writeString(dos, s"Removing $objId failed: ${e.getMessage}")
           }
-        case _ => dos.writeInt(-1)
+        case _ =>
+          dos.writeInt(-1)
+          writeString(dos, s"Error: unknown method $methodName")
       }
     } else {
       handleMethodCall(isStatic, objId, methodName, numArgs, dis, dos)
@@ -113,7 +118,11 @@ private[r] class RBackendHandler(server: RBackend)
     var obj: Object = null
     try {
       val cls = if (isStatic) {
+<<<<<<< HEAD
         getStaticClass(objId)
+=======
+        Utils.classForName(objId)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       } else {
         JVMObjectTracker.get(objId) match {
           case None => throw new IllegalArgumentException("Object not found " + objId)
@@ -159,8 +168,11 @@ private[r] class RBackendHandler(server: RBackend)
       }
     } catch {
       case e: Exception =>
-        logError(s"$methodName on $objId failed", e)
+        logError(s"$methodName on $objId failed")
         writeInt(dos, -1)
+        // Writing the error message of the cause for the exception. This will be returned
+        // to user in the R process.
+        writeString(dos, Utils.exceptionString(e.getCause))
     }
   }
 

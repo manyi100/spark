@@ -34,10 +34,18 @@ import org.apache.hadoop.hive.common.FileUtils
 import org.apache.spark.mapred.SparkHadoopMapRedUtil
 import org.apache.spark.sql.Row
 import org.apache.spark.{Logging, SerializableWritable, SparkHadoopWriter}
+<<<<<<< HEAD
 import org.apache.spark.sql.catalyst.util.DateUtils
 import org.apache.spark.sql.hive.{ShimFileSinkDesc => FileSinkDesc}
 import org.apache.spark.sql.hive.HiveShim._
 import org.apache.spark.sql.types._
+=======
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.catalyst.util.DateTimeUtils
+import org.apache.spark.sql.hive.HiveShim.{ShimFileSinkDesc => FileSinkDesc}
+import org.apache.spark.sql.types._
+import org.apache.spark.util.SerializableJobConf
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 /**
  * Internal helper class that saves an RDD using a Hive OutputFormat.
@@ -58,7 +66,7 @@ private[hive] class SparkHiveWriterContainer(
     PlanUtils.configureOutputJobPropertiesForStorageHandler(tableDesc)
     Utilities.copyTableJobPropertiesToConf(tableDesc, jobConf)
   }
-  protected val conf = new SerializableWritable(jobConf)
+  protected val conf = new SerializableJobConf(jobConf)
 
   private var jobID = 0
   private var splitID = 0
@@ -94,7 +102,13 @@ private[hive] class SparkHiveWriterContainer(
     "part-" + numberFormat.format(splitID) + extension
   }
 
+<<<<<<< HEAD
   def getLocalFileWriter(row: Row, schema: StructType): FileSinkOperator.RecordWriter = writer
+=======
+  def getLocalFileWriter(row: InternalRow, schema: StructType): FileSinkOperator.RecordWriter = {
+    writer
+  }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   def close() {
     // Seems the boolean value passed into close does not matter.
@@ -168,7 +182,7 @@ private[spark] class SparkHiveDynamicPartitionWriterContainer(
   import SparkHiveDynamicPartitionWriterContainer._
 
   private val defaultPartName = jobConf.get(
-    ConfVars.DEFAULTPARTITIONNAME.varname, ConfVars.DEFAULTPARTITIONNAME.defaultVal)
+    ConfVars.DEFAULTPARTITIONNAME.varname, ConfVars.DEFAULTPARTITIONNAME.defaultStrVal)
 
   @transient private var writers: mutable.HashMap[String, FileSinkOperator.RecordWriter] = _
 
@@ -197,11 +211,20 @@ private[spark] class SparkHiveDynamicPartitionWriterContainer(
     jobConf.setBoolean(SUCCESSFUL_JOB_OUTPUT_DIR_MARKER, oldMarker)
   }
 
+<<<<<<< HEAD
   override def getLocalFileWriter(row: Row, schema: StructType): FileSinkOperator.RecordWriter = {
     def convertToHiveRawString(col: String, value: Any): String = {
       val raw = String.valueOf(value)
       schema(col).dataType match {
         case DateType => DateUtils.toString(raw.toInt)
+=======
+  override def getLocalFileWriter(row: InternalRow, schema: StructType)
+    : FileSinkOperator.RecordWriter = {
+    def convertToHiveRawString(col: String, value: Any): String = {
+      val raw = String.valueOf(value)
+      schema(col).dataType match {
+        case DateType => DateTimeUtils.dateToString(raw.toInt)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         case _: DecimalType => BigDecimal(raw).toString()
         case _ => raw
       }

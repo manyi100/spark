@@ -20,7 +20,12 @@
 # @rdname aggregateRDD
 # @seealso reduce
 # @export
+<<<<<<< HEAD
 setGeneric("aggregateRDD", function(x, zeroValue, seqOp, combOp) { standardGeneric("aggregateRDD") })
+=======
+setGeneric("aggregateRDD",
+           function(x, zeroValue, seqOp, combOp) { standardGeneric("aggregateRDD") })
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 # @rdname cache-methods
 # @export
@@ -58,6 +63,13 @@ setGeneric("count", function(x) { standardGeneric("count") })
 # @export
 setGeneric("countByValue", function(x) { standardGeneric("countByValue") })
 
+<<<<<<< HEAD
+=======
+# @rdname statfunctions
+# @export
+setGeneric("crosstab", function(x, col1, col2) { standardGeneric("crosstab") })
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 # @rdname distinct
 # @export
 setGeneric("distinct", function(x, numPartitions = 1) { standardGeneric("distinct") })
@@ -249,8 +261,15 @@ setGeneric("flatMapValues", function(X, FUN) { standardGeneric("flatMapValues") 
 
 # @rdname intersection
 # @export
+<<<<<<< HEAD
 setGeneric("intersection", function(x, other, numPartitions = 1) {
   standardGeneric("intersection") })
+=======
+setGeneric("intersection",
+           function(x, other, numPartitions = 1) {
+             standardGeneric("intersection")
+           })
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 # @rdname keys
 # @export
@@ -454,6 +473,13 @@ setGeneric("isLocal", function(x) { standardGeneric("isLocal") })
 #' @export
 setGeneric("limit", function(x, num) {standardGeneric("limit") })
 
+<<<<<<< HEAD
+=======
+#' rdname merge
+#' @export
+setGeneric("merge")
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 #' @rdname withColumn
 #' @export
 setGeneric("mutate", function(x, ...) {standardGeneric("mutate") })
@@ -484,9 +510,13 @@ setGeneric("sample",
 #' @rdname sample
 #' @export
 setGeneric("sample_frac",
+<<<<<<< HEAD
            function(x, withReplacement, fraction, seed) {
              standardGeneric("sample_frac")
            })
+=======
+           function(x, withReplacement, fraction, seed) { standardGeneric("sample_frac") })
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 #' @rdname saveAsParquetFile
 #' @export
@@ -499,11 +529,19 @@ setGeneric("saveAsTable", function(df, tableName, source, mode, ...) {
 })
 
 #' @rdname write.df
+<<<<<<< HEAD
 #' @export
 setGeneric("write.df", function(df, path, ...) { standardGeneric("write.df") })
 
 #' @rdname write.df
 #' @export
+=======
+#' @export
+setGeneric("write.df", function(df, path, ...) { standardGeneric("write.df") })
+
+#' @rdname write.df
+#' @export
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 setGeneric("saveDF", function(df, path, ...) { standardGeneric("saveDF") })
 
 #' @rdname schema
@@ -526,6 +564,13 @@ setGeneric("showDF", function(x,...) { standardGeneric("showDF") })
 #' @export
 setGeneric("summarize", function(x,...) { standardGeneric("summarize") })
 
+<<<<<<< HEAD
+=======
+##' rdname summary
+##' @export
+setGeneric("summary", function(x, ...) { standardGeneric("summary") })
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 # @rdname tojson
 # @export
 setGeneric("toJSON", function(x) { standardGeneric("toJSON") })
@@ -548,8 +593,8 @@ setGeneric("withColumn", function(x, colName, col) { standardGeneric("withColumn
 
 #' @rdname withColumnRenamed
 #' @export
-setGeneric("withColumnRenamed", function(x, existingCol, newCol) {
-  standardGeneric("withColumnRenamed") })
+setGeneric("withColumnRenamed",
+           function(x, existingCol, newCol) { standardGeneric("withColumnRenamed") })
 
 
 ###################### Column Methods ##########################
@@ -565,6 +610,10 @@ setGeneric("asc", function(x) { standardGeneric("asc") })
 #' @rdname column
 #' @export
 setGeneric("avg", function(x, ...) { standardGeneric("avg") })
+
+#' @rdname column
+#' @export
+setGeneric("between", function(x, bounds) { standardGeneric("between") })
 
 #' @rdname column
 #' @export
@@ -652,7 +701,22 @@ setGeneric("toDegrees", function(x) { standardGeneric("toDegrees") })
 #' @rdname column
 #' @export
 setGeneric("toRadians", function(x) { standardGeneric("toRadians") })
+<<<<<<< HEAD
 
 #' @rdname column
 #' @export
 setGeneric("upper", function(x) { standardGeneric("upper") })
+=======
+
+#' @rdname column
+#' @export
+setGeneric("upper", function(x) { standardGeneric("upper") })
+
+#' @rdname glm
+#' @export
+setGeneric("glm")
+
+#' @rdname rbind
+#' @export
+setGeneric("rbind", signature = "...")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

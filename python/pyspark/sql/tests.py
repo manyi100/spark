@@ -27,6 +27,7 @@ import shutil
 import tempfile
 import pickle
 import functools
+import time
 import datetime
 
 import py4j
@@ -44,8 +45,28 @@ from pyspark.sql import SQLContext, HiveContext, Column, Row
 from pyspark.sql.types import *
 from pyspark.sql.types import UserDefinedType, _infer_type
 from pyspark.tests import ReusedPySparkTestCase
+<<<<<<< HEAD
 from pyspark.sql.functions import UserDefinedFunction
 from pyspark.sql.window import Window
+=======
+from pyspark.sql.functions import UserDefinedFunction, sha2
+from pyspark.sql.window import Window
+from pyspark.sql.utils import AnalysisException, IllegalArgumentException
+
+
+class UTC(datetime.tzinfo):
+    """UTC"""
+    ZERO = datetime.timedelta(0)
+
+    def utcoffset(self, dt):
+        return self.ZERO
+
+    def tzname(self, dt):
+        return "UTC"
+
+    def dst(self, dt):
+        return self.ZERO
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 
 class ExamplePointUDT(UserDefinedType):
@@ -59,7 +80,7 @@ class ExamplePointUDT(UserDefinedType):
 
     @classmethod
     def module(cls):
-        return 'pyspark.tests'
+        return 'pyspark.sql.tests'
 
     @classmethod
     def scalaUDT(cls):
@@ -90,8 +111,43 @@ class ExamplePoint:
         return "(%s,%s)" % (self.x, self.y)
 
     def __eq__(self, other):
-        return isinstance(other, ExamplePoint) and \
+        return isinstance(other, self.__class__) and \
             other.x == self.x and other.y == self.y
+
+
+class PythonOnlyUDT(UserDefinedType):
+    """
+    User-defined type (UDT) for ExamplePoint.
+    """
+
+    @classmethod
+    def sqlType(self):
+        return ArrayType(DoubleType(), False)
+
+    @classmethod
+    def module(cls):
+        return '__main__'
+
+    def serialize(self, obj):
+        return [obj.x, obj.y]
+
+    def deserialize(self, datum):
+        return PythonOnlyPoint(datum[0], datum[1])
+
+    @staticmethod
+    def foo():
+        pass
+
+    @property
+    def props(self):
+        return {}
+
+
+class PythonOnlyPoint(ExamplePoint):
+    """
+    An example class to demonstrate UDT in only Python
+    """
+    __UDT__ = PythonOnlyUDT()
 
 
 class DataTypeTests(unittest.TestCase):
@@ -135,6 +191,20 @@ class SQLTests(ReusedPySparkTestCase):
         self.assertEqual(self.sqlCtx.range(-2).count(), 0)
         self.assertEqual(self.sqlCtx.range(3).count(), 3)
 
+<<<<<<< HEAD
+=======
+    def test_duplicated_column_names(self):
+        df = self.sqlCtx.createDataFrame([(1, 2)], ["c", "c"])
+        row = df.select('*').first()
+        self.assertEqual(1, row[0])
+        self.assertEqual(2, row[1])
+        self.assertEqual("Row(c=1, c=2)", str(row))
+        # Cannot access columns
+        self.assertRaises(AnalysisException, lambda: df.select(df[0]).first())
+        self.assertRaises(AnalysisException, lambda: df.select(df.c).first())
+        self.assertRaises(AnalysisException, lambda: df.select(df["c"]).first())
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     def test_explode(self):
         from pyspark.sql.functions import explode
         d = [Row(a=1, intlist=[1, 2, 3], mapfield={"a": "b"})]
@@ -368,10 +438,39 @@ class SQLTests(ReusedPySparkTestCase):
         self.assertEqual(1, row.asDict()["l"][0].a)
         self.assertEqual(1.0, row.asDict()['d']['key'].c)
 
+    def test_udt(self):
+        from pyspark.sql.types import _parse_datatype_json_string, _infer_type, _verify_type
+        from pyspark.sql.tests import ExamplePointUDT, ExamplePoint
+
+        def check_datatype(datatype):
+            pickled = pickle.loads(pickle.dumps(datatype))
+            assert datatype == pickled
+            scala_datatype = self.sqlCtx._ssql_ctx.parseDataType(datatype.json())
+            python_datatype = _parse_datatype_json_string(scala_datatype.json())
+            assert datatype == python_datatype
+
+        check_datatype(ExamplePointUDT())
+        structtype_with_udt = StructType([StructField("label", DoubleType(), False),
+                                          StructField("point", ExamplePointUDT(), False)])
+        check_datatype(structtype_with_udt)
+        p = ExamplePoint(1.0, 2.0)
+        self.assertEqual(_infer_type(p), ExamplePointUDT())
+        _verify_type(ExamplePoint(1.0, 2.0), ExamplePointUDT())
+        self.assertRaises(ValueError, lambda: _verify_type([1.0, 2.0], ExamplePointUDT()))
+
+        check_datatype(PythonOnlyUDT())
+        structtype_with_udt = StructType([StructField("label", DoubleType(), False),
+                                          StructField("point", PythonOnlyUDT(), False)])
+        check_datatype(structtype_with_udt)
+        p = PythonOnlyPoint(1.0, 2.0)
+        self.assertEqual(_infer_type(p), PythonOnlyUDT())
+        _verify_type(PythonOnlyPoint(1.0, 2.0), PythonOnlyUDT())
+        self.assertRaises(ValueError, lambda: _verify_type([1.0, 2.0], PythonOnlyUDT()))
+
     def test_infer_schema_with_udt(self):
         from pyspark.sql.tests import ExamplePoint, ExamplePointUDT
         row = Row(label=1.0, point=ExamplePoint(1.0, 2.0))
-        df = self.sc.parallelize([row]).toDF()
+        df = self.sqlCtx.createDataFrame([row])
         schema = df.schema
         field = [f for f in schema.fields if f.name == "point"][0]
         self.assertEqual(type(field.dataType), ExamplePointUDT)
@@ -379,25 +478,65 @@ class SQLTests(ReusedPySparkTestCase):
         point = self.sqlCtx.sql("SELECT point FROM labeled_point").head().point
         self.assertEqual(point, ExamplePoint(1.0, 2.0))
 
+        row = Row(label=1.0, point=PythonOnlyPoint(1.0, 2.0))
+        df = self.sqlCtx.createDataFrame([row])
+        schema = df.schema
+        field = [f for f in schema.fields if f.name == "point"][0]
+        self.assertEqual(type(field.dataType), PythonOnlyUDT)
+        df.registerTempTable("labeled_point")
+        point = self.sqlCtx.sql("SELECT point FROM labeled_point").head().point
+        self.assertEqual(point, PythonOnlyPoint(1.0, 2.0))
+
     def test_apply_schema_with_udt(self):
         from pyspark.sql.tests import ExamplePoint, ExamplePointUDT
         row = (1.0, ExamplePoint(1.0, 2.0))
-        rdd = self.sc.parallelize([row])
         schema = StructType([StructField("label", DoubleType(), False),
                              StructField("point", ExamplePointUDT(), False)])
-        df = rdd.toDF(schema)
+        df = self.sqlCtx.createDataFrame([row], schema)
         point = df.head().point
         self.assertEquals(point, ExamplePoint(1.0, 2.0))
 
-    def test_parquet_with_udt(self):
-        from pyspark.sql.tests import ExamplePoint
+        row = (1.0, PythonOnlyPoint(1.0, 2.0))
+        schema = StructType([StructField("label", DoubleType(), False),
+                             StructField("point", PythonOnlyUDT(), False)])
+        df = self.sqlCtx.createDataFrame([row], schema)
+        point = df.head().point
+        self.assertEquals(point, PythonOnlyPoint(1.0, 2.0))
+
+    def test_udf_with_udt(self):
+        from pyspark.sql.tests import ExamplePoint, ExamplePointUDT
         row = Row(label=1.0, point=ExamplePoint(1.0, 2.0))
-        df0 = self.sc.parallelize([row]).toDF()
+        df = self.sqlCtx.createDataFrame([row])
+        self.assertEqual(1.0, df.map(lambda r: r.point.x).first())
+        udf = UserDefinedFunction(lambda p: p.y, DoubleType())
+        self.assertEqual(2.0, df.select(udf(df.point)).first()[0])
+        udf2 = UserDefinedFunction(lambda p: ExamplePoint(p.x + 1, p.y + 1), ExamplePointUDT())
+        self.assertEqual(ExamplePoint(2.0, 3.0), df.select(udf2(df.point)).first()[0])
+
+        row = Row(label=1.0, point=PythonOnlyPoint(1.0, 2.0))
+        df = self.sqlCtx.createDataFrame([row])
+        self.assertEqual(1.0, df.map(lambda r: r.point.x).first())
+        udf = UserDefinedFunction(lambda p: p.y, DoubleType())
+        self.assertEqual(2.0, df.select(udf(df.point)).first()[0])
+        udf2 = UserDefinedFunction(lambda p: PythonOnlyPoint(p.x + 1, p.y + 1), PythonOnlyUDT())
+        self.assertEqual(PythonOnlyPoint(2.0, 3.0), df.select(udf2(df.point)).first()[0])
+
+    def test_parquet_with_udt(self):
+        from pyspark.sql.tests import ExamplePoint, ExamplePointUDT
+        row = Row(label=1.0, point=ExamplePoint(1.0, 2.0))
+        df0 = self.sqlCtx.createDataFrame([row])
         output_dir = os.path.join(self.tempdir.name, "labeled_point")
-        df0.saveAsParquetFile(output_dir)
+        df0.write.parquet(output_dir)
         df1 = self.sqlCtx.parquetFile(output_dir)
         point = df1.head().point
         self.assertEquals(point, ExamplePoint(1.0, 2.0))
+
+        row = Row(label=1.0, point=PythonOnlyPoint(1.0, 2.0))
+        df0 = self.sqlCtx.createDataFrame([row])
+        df0.write.parquet(output_dir, mode='overwrite')
+        df1 = self.sqlCtx.parquetFile(output_dir)
+        point = df1.head().point
+        self.assertEquals(point, PythonOnlyPoint(1.0, 2.0))
 
     def test_column_operators(self):
         ci = self.df.key
@@ -506,6 +645,38 @@ class SQLTests(ReusedPySparkTestCase):
         self.assertEqual([Row(a=2, b=1, c=3), Row(a=4, b=1, c=4)],
                          df.filter(df.a.between(df.b, df.c)).collect())
 
+<<<<<<< HEAD
+=======
+    def test_struct_type(self):
+        from pyspark.sql.types import StructType, StringType, StructField
+        struct1 = StructType().add("f1", StringType(), True).add("f2", StringType(), True, None)
+        struct2 = StructType([StructField("f1", StringType(), True),
+                              StructField("f2", StringType(), True, None)])
+        self.assertEqual(struct1, struct2)
+
+        struct1 = StructType().add("f1", StringType(), True).add("f2", StringType(), True, None)
+        struct2 = StructType([StructField("f1", StringType(), True)])
+        self.assertNotEqual(struct1, struct2)
+
+        struct1 = (StructType().add(StructField("f1", StringType(), True))
+                   .add(StructField("f2", StringType(), True, None)))
+        struct2 = StructType([StructField("f1", StringType(), True),
+                              StructField("f2", StringType(), True, None)])
+        self.assertEqual(struct1, struct2)
+
+        struct1 = (StructType().add(StructField("f1", StringType(), True))
+                   .add(StructField("f2", StringType(), True, None)))
+        struct2 = StructType([StructField("f1", StringType(), True)])
+        self.assertNotEqual(struct1, struct2)
+
+        # Catch exception raised during improper construction
+        try:
+            struct1 = StructType().add("name")
+            self.assertEqual(1, 0)
+        except ValueError:
+            self.assertEqual(1, 1)
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     def test_save_and_load(self):
         df = self.df
         tmpPath = tempfile.mkdtemp()
@@ -513,6 +684,7 @@ class SQLTests(ReusedPySparkTestCase):
         df.write.json(tmpPath)
         actual = self.sqlCtx.read.json(tmpPath)
         self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+<<<<<<< HEAD
 
         schema = StructType([StructField("value", StringType(), True)])
         actual = self.sqlCtx.read.json(tmpPath, schema)
@@ -533,6 +705,54 @@ class SQLTests(ReusedPySparkTestCase):
         self.sqlCtx.sql("SET spark.sql.sources.default=org.apache.spark.sql.json")
         actual = self.sqlCtx.load(path=tmpPath)
         self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+        self.sqlCtx.sql("SET spark.sql.sources.default=" + defaultDataSourceName)
+
+        shutil.rmtree(tmpPath)
+
+    def test_save_and_load_builder(self):
+        df = self.df
+        tmpPath = tempfile.mkdtemp()
+        shutil.rmtree(tmpPath)
+        df.write.json(tmpPath)
+        actual = self.sqlCtx.read.json(tmpPath)
+        self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+
+        schema = StructType([StructField("value", StringType(), True)])
+        actual = self.sqlCtx.read.json(tmpPath, schema)
+        self.assertEqual(sorted(df.select("value").collect()), sorted(actual.collect()))
+
+<<<<<<< HEAD
+        df.write.mode("overwrite").json(tmpPath)
+        actual = self.sqlCtx.read.json(tmpPath)
+        self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+
+        df.write.mode("overwrite").options(noUse="this options will not be used in save.")\
+                .option("noUse", "this option will not be used in save.")\
+                .format("json").save(path=tmpPath)
+        actual =\
+            self.sqlCtx.read.format("json")\
+                            .load(path=tmpPath, noUse="this options will not be used in load.")
+=======
+        df.write.json(tmpPath, "overwrite")
+        actual = self.sqlCtx.read.json(tmpPath)
+        self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+
+        df.write.save(format="json", mode="overwrite", path=tmpPath,
+                      noUse="this options will not be used in save.")
+        actual = self.sqlCtx.read.load(format="json", path=tmpPath,
+                                       noUse="this options will not be used in load.")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+        self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+
+        defaultDataSourceName = self.sqlCtx.getConf("spark.sql.sources.default",
+                                                    "org.apache.spark.sql.parquet")
+        self.sqlCtx.sql("SET spark.sql.sources.default=org.apache.spark.sql.json")
+        actual = self.sqlCtx.load(path=tmpPath)
+        self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+<<<<<<< HEAD
+=======
         self.sqlCtx.sql("SET spark.sql.sources.default=" + defaultDataSourceName)
 
         shutil.rmtree(tmpPath)
@@ -566,6 +786,7 @@ class SQLTests(ReusedPySparkTestCase):
         self.sqlCtx.sql("SET spark.sql.sources.default=org.apache.spark.sql.json")
         actual = self.sqlCtx.load(path=tmpPath)
         self.assertEqual(sorted(df.collect()), sorted(actual.collect()))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         self.sqlCtx.sql("SET spark.sql.sources.default=" + defaultDataSourceName)
 
         shutil.rmtree(tmpPath)
@@ -641,6 +862,35 @@ class SQLTests(ReusedPySparkTestCase):
         self.assertEqual(1, df.filter(df.time == time).count())
         self.assertEqual(0, df.filter(df.date > date).count())
         self.assertEqual(0, df.filter(df.time > time).count())
+
+    def test_time_with_timezone(self):
+        day = datetime.date.today()
+        now = datetime.datetime.now()
+        ts = time.mktime(now.timetuple())
+        # class in __main__ is not serializable
+        from pyspark.sql.tests import UTC
+        utc = UTC()
+        utcnow = datetime.datetime.utcfromtimestamp(ts)  # without microseconds
+        # add microseconds to utcnow (keeping year,month,day,hour,minute,second)
+        utcnow = datetime.datetime(*(utcnow.timetuple()[:6] + (now.microsecond, utc)))
+        df = self.sqlCtx.createDataFrame([(day, now, utcnow)])
+        day1, now1, utcnow1 = df.first()
+        self.assertEqual(day1, day)
+        self.assertEqual(now, now1)
+        self.assertEqual(now, utcnow1)
+
+    def test_decimal(self):
+        from decimal import Decimal
+        schema = StructType([StructField("decimal", DecimalType(10, 5))])
+        df = self.sqlCtx.createDataFrame([(Decimal("3.14159"),)], schema)
+        row = df.select(df.decimal + 1).first()
+        self.assertEqual(row[0], Decimal("4.14159"))
+        tmpPath = tempfile.mkdtemp()
+        shutil.rmtree(tmpPath)
+        df.write.parquet(tmpPath)
+        df2 = self.sqlCtx.read.parquet(tmpPath)
+        row = df2.first()
+        self.assertEqual(row[0], Decimal("3.14159"))
 
     def test_dropna(self):
         schema = StructType([
@@ -751,6 +1001,16 @@ class SQLTests(ReusedPySparkTestCase):
         result = df.select(functions.bitwiseNOT(df.b)).collect()[0].asDict()
         self.assertEqual(~75, result['~b'])
 
+<<<<<<< HEAD
+=======
+    def test_expr(self):
+        from pyspark.sql import functions
+        row = Row(a="length string", b=75)
+        df = self.sqlCtx.createDataFrame([row])
+        result = df.select(functions.expr("length(a)")).collect()[0].asDict()
+        self.assertEqual(13, result["'length(a)"])
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     def test_replace(self):
         schema = StructType([
             StructField("name", StringType(), True),
@@ -799,6 +1059,22 @@ class SQLTests(ReusedPySparkTestCase):
         self.assertEqual(row.age, 10)
         self.assertEqual(row.height, None)
 
+<<<<<<< HEAD
+=======
+    def test_capture_analysis_exception(self):
+        self.assertRaises(AnalysisException, lambda: self.sqlCtx.sql("select abc"))
+        self.assertRaises(AnalysisException, lambda: self.df.selectExpr("a + b"))
+        # RuntimeException should not be captured
+        self.assertRaises(py4j.protocol.Py4JJavaError, lambda: self.sqlCtx.sql("abc"))
+
+    def test_capture_illegalargument_exception(self):
+        self.assertRaisesRegexp(IllegalArgumentException, "Setting negative mapred.reduce.tasks",
+                                lambda: self.sqlCtx.sql("SET mapred.reduce.tasks=-1"))
+        df = self.sqlCtx.createDataFrame([(1, 2)], ["a", "b"])
+        self.assertRaisesRegexp(IllegalArgumentException, "1024 is not in the permitted values",
+                                lambda: df.select(sha2(df.a, 1024)).collect())
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 class HiveContextSQLTests(ReusedPySparkTestCase):
 

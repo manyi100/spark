@@ -22,7 +22,7 @@ The DataFrame API is available in [Scala](api/scala/index.html#org.apache.spark.
 All of the examples on this page use sample data included in the Spark distribution and can be run in the `spark-shell`, `pyspark` shell, or `sparkR` shell.
 
 
-## Starting Point: `SQLContext`
+## Starting Point: SQLContext
 
 <div class="codetabs">
 <div data-lang="scala"  markdown="1">
@@ -570,7 +570,7 @@ teenagers = sqlContext.sql("SELECT name FROM people WHERE age >= 13 AND age <= 1
 # The results of SQL queries are RDDs and support all the normal RDD operations.
 teenNames = teenagers.map(lambda p: "Name: " + p.name)
 for teenName in teenNames.collect():
-  print teenName
+  print(teenName)
 {% endhighlight %}
 
 </div>
@@ -752,7 +752,7 @@ results = sqlContext.sql("SELECT name FROM people")
 # The results of SQL queries are RDDs and support all the normal RDD operations.
 names = results.map(lambda p: "Name: " + p.name)
 for name in names.collect():
-  print name
+  print(name)
 {% endhighlight %}
 
 </div>
@@ -800,7 +800,19 @@ df.select("name", "favorite_color").write().save("namesAndFavColors.parquet");
 
 df = sqlContext.read.load("examples/src/main/resources/users.parquet")
 df.select("name", "favorite_color").write.save("namesAndFavColors.parquet")
+<<<<<<< HEAD
+=======
 
+{% endhighlight %}
+
+</div>
+
+<div data-lang="r"  markdown="1">
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+
+{% highlight r %}
+df <- loadDF(sqlContext, "people.parquet")
+saveDF(select(df, "name", "age"), "namesAndAges.parquet")
 {% endhighlight %}
 
 </div>
@@ -1006,7 +1018,41 @@ parquetFile.registerTempTable("parquetFile");
 teenagers = sqlContext.sql("SELECT name FROM parquetFile WHERE age >= 13 AND age <= 19")
 teenNames = teenagers.map(lambda p: "Name: " + p.name)
 for teenName in teenNames.collect():
-  print teenName
+  print(teenName)
+{% endhighlight %}
+
+</div>
+
+<div data-lang="r"  markdown="1">
+
+{% highlight r %}
+# sqlContext from the previous example is used in this example.
+
+schemaPeople # The DataFrame from the previous example.
+
+# DataFrames can be saved as Parquet files, maintaining the schema information.
+saveAsParquetFile(schemaPeople, "people.parquet")
+
+# Read in the Parquet file created above.  Parquet files are self-describing so the schema is preserved.
+# The result of loading a parquet file is also a DataFrame.
+parquetFile <- parquetFile(sqlContext, "people.parquet")
+
+# Parquet files can also be registered as tables and then used in SQL statements.
+registerTempTable(parquetFile, "parquetFile");
+teenagers <- sql(sqlContext, "SELECT name FROM parquetFile WHERE age >= 13 AND age <= 19")
+teenNames <- map(teenagers, function(p) { paste("Name:", p$name)})
+for (teenName in collect(teenNames)) {
+  cat(teenName, "\n")
+}
+{% endhighlight %}
+
+</div>
+
+<div data-lang="python"  markdown="1">
+
+{% highlight python %}
+# sqlContext is an existing HiveContext
+sqlContext.sql("REFRESH TABLE my_table")
 {% endhighlight %}
 
 </div>
@@ -1054,7 +1100,7 @@ SELECT * FROM parquetTable
 
 </div>
 
-### Partition discovery
+### Partition Discovery
 
 Table partitioning is a common optimization approach used in systems like Hive.  In a partitioned
 table, data are usually stored in different directories, with partitioning column values encoded in
@@ -1102,9 +1148,13 @@ root
 {% endhighlight %}
 
 Notice that the data types of the partitioning columns are automatically inferred.  Currently,
-numeric data types and string type are supported.
+numeric data types and string type are supported. Sometimes users may not want to automatically
+infer the data types of the partitioning columns. For these use cases, the automatic type inference
+can be configured by `spark.sql.sources.partitionColumnTypeInference.enabled`, which is default to
+`true`. When type inference is disabled, string type will be used for the partitioning columns.
 
-### Schema merging
+
+### Schema Merging
 
 Like ProtocolBuffer, Avro, and Thrift, Parquet also supports schema evolution.  Users can start with
 a simple schema, and gradually add more columns to the schema as needed.  In this way, users may end
@@ -1166,6 +1216,36 @@ df3.printSchema()
 
 # The final schema consists of all 3 columns in the Parquet files together
 # with the partitioning column appeared in the partition directory paths.
+<<<<<<< HEAD
+# root
+# |-- single: int (nullable = true)
+# |-- double: int (nullable = true)
+# |-- triple: int (nullable = true)
+# |-- key : int (nullable = true)
+{% endhighlight %}
+
+</div>
+
+<div data-lang="r"  markdown="1">
+
+{% highlight r %}
+# sqlContext from the previous example is used in this example.
+
+# Create a simple DataFrame, stored into a partition directory
+saveDF(df1, "data/test_table/key=1", "parquet", "overwrite")
+
+# Create another DataFrame in a new partition directory,
+# adding a new column and dropping an existing column
+saveDF(df2, "data/test_table/key=2", "parquet", "overwrite")
+
+# Read the partitioned table
+df3 <- loadDF(sqlContext, "data/test_table", "parquet")
+printSchema(df3)
+
+# The final schema consists of all 3 columns in the Parquet files together
+# with the partitioning column appeared in the partition directory paths.
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 # root
 # |-- single: int (nullable = true)
 # |-- double: int (nullable = true)
@@ -1204,6 +1284,79 @@ printSchema(df3)
 
 </div>
 
+### Hive metastore Parquet table conversion
+
+When reading from and writing to Hive metastore Parquet tables, Spark SQL will try to use its own
+Parquet support instead of Hive SerDe for better performance. This behavior is controlled by the
+`spark.sql.hive.convertMetastoreParquet` configuration, and is turned on by default.
+
+#### Hive/Parquet Schema Reconciliation
+
+There are two key differences between Hive and Parquet from the perspective of table schema
+processing.
+
+1. Hive is case insensitive, while Parquet is not
+1. Hive considers all columns nullable, while nullability in Parquet is significant
+
+Due to this reason, we must reconcile Hive metastore schema with Parquet schema when converting a
+Hive metastore Parquet table to a Spark SQL Parquet table.  The reconciliation rules are:
+
+1. Fields that have the same name in both schema must have the same data type regardless of
+   nullability.  The reconciled field should have the data type of the Parquet side, so that
+   nullability is respected.
+
+1. The reconciled schema contains exactly those fields defined in Hive metastore schema.
+
+   - Any fields that only appear in the Parquet schema are dropped in the reconciled schema.
+   - Any fileds that only appear in the Hive metastore schema are added as nullable field in the
+     reconciled schema.
+
+#### Metadata Refreshing
+
+Spark SQL caches Parquet metadata for better performance.  When Hive metastore Parquet table
+conversion is enabled, metadata of those converted tables are also cached.  If these tables are
+updated by Hive or other external tools, you need to refresh them manually to ensure consistent
+metadata.
+
+<div class="codetabs">
+
+<div data-lang="scala"  markdown="1">
+
+{% highlight scala %}
+// sqlContext is an existing HiveContext
+sqlContext.refreshTable("my_table")
+{% endhighlight %}
+
+</div>
+
+<div data-lang="java"  markdown="1">
+
+{% highlight java %}
+// sqlContext is an existing HiveContext
+sqlContext.refreshTable("my_table")
+{% endhighlight %}
+
+</div>
+
+<div data-lang="python"  markdown="1">
+
+{% highlight python %}
+# sqlContext is an existing HiveContext
+sqlContext.refreshTable("my_table")
+{% endhighlight %}
+
+</div>
+
+<div data-lang="sql"  markdown="1">
+
+{% highlight sql %}
+REFRESH TABLE my_table;
+{% endhighlight %}
+
+</div>
+
+</div>
+
 ### Configuration
 
 Configuration of Parquet can be done using the `setConf` method on `SQLContext` or by running
@@ -1216,7 +1369,7 @@ Configuration of Parquet can be done using the `setConf` method on `SQLContext` 
   <td>false</td>
   <td>
     Some other Parquet-producing systems, in particular Impala and older versions of Spark SQL, do
-    not differentiate between binary data and strings when writing out the Parquet schema.  This
+    not differentiate between binary data and strings when writing out the Parquet schema. This
     flag tells Spark SQL to interpret binary data as a string to provide compatibility with these systems.
   </td>
 </tr>
@@ -1233,7 +1386,7 @@ Configuration of Parquet can be done using the `setConf` method on `SQLContext` 
   <td><code>spark.sql.parquet.cacheMetadata</code></td>
   <td>true</td>
   <td>
-    Turns on caching of Parquet schema metadata.  Can speed up querying of static data.
+    Turns on caching of Parquet schema metadata. Can speed up querying of static data.
   </td>
 </tr>
 <tr>
@@ -1246,6 +1399,7 @@ Configuration of Parquet can be done using the `setConf` method on `SQLContext` 
 </tr>
 <tr>
   <td><code>spark.sql.parquet.filterPushdown</code></td>
+<<<<<<< HEAD
   <td>false</td>
   <td>
     Turn on Parquet filter pushdown optimization. This feature is turned off by default because of a known
@@ -1253,6 +1407,10 @@ Configuration of Parquet can be done using the `setConf` method on `SQLContext` 
     However, if your table doesn't contain any nullable string or binary columns, it's still safe to turn
     this feature on.
   </td>
+=======
+  <td>true</td>
+  <td>Enables Parquet filter push-down optimization when set to true.</td>
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 </tr>
 <tr>
   <td><code>spark.sql.hive.convertMetastoreParquet</code></td>
@@ -1260,6 +1418,34 @@ Configuration of Parquet can be done using the `setConf` method on `SQLContext` 
   <td>
     When set to false, Spark SQL will use the Hive SerDe for parquet tables instead of the built in
     support.
+  </td>
+</tr>
+<tr>
+  <td><code>spark.sql.parquet.output.committer.class</code></td>
+  <td><code>org.apache.parquet.hadoop.<br />ParquetOutputCommitter</code></td>
+  <td>
+    <p>
+      The output committer class used by Parquet. The specified class needs to be a subclass of
+      <code>org.apache.hadoop.<br />mapreduce.OutputCommitter</code>.  Typically, it's also a
+      subclass of <code>org.apache.parquet.hadoop.ParquetOutputCommitter</code>.
+    </p>
+    <p>
+      <b>Note:</b>
+      <ul>
+        <li>
+          This option must be set via Hadoop <code>Configuration</code> rather than Spark
+          <code>SQLConf</code>.
+        </li>
+        <li>
+          This option overrides <code>spark.sql.sources.<br />outputCommitterClass</code>.
+        </li>
+      </ul>
+    </p>
+    <p>
+      Spark SQL comes with a builtin
+      <code>org.apache.spark.sql.<br />parquet.DirectParquetOutputCommitter</code>, which can be more
+      efficient then the default Parquet output committer when writing data to S3.
+    </p>
   </td>
 </tr>
 </table>
@@ -1441,7 +1627,12 @@ This command builds a new assembly jar that includes Hive. Note that this Hive a
 on all of the worker nodes, as they will need access to the Hive serialization and deserialization libraries
 (SerDes) in order to access data stored in Hive.
 
-Configuration of Hive is done by placing your `hive-site.xml` file in `conf/`.
+Configuration of Hive is done by placing your `hive-site.xml` file in `conf/`. Please note when running
+the query on a YARN cluster (`yarn-cluster` mode), the `datanucleus` jars under the `lib_managed/jars` directory
+and `hive-site.xml` under `conf/` directory need to be available on the driver and all executors launched by the
+YARN cluster. The convenient way to do this is adding them through the `--jars` option and `--file` option of the
+`spark-submit` command.
+
 
 <div class="codetabs">
 
@@ -1654,9 +1845,9 @@ the Data Sources API.  The following options are supported:
 <div data-lang="scala"  markdown="1">
 
 {% highlight scala %}
-val jdbcDF = sqlContext.load("jdbc", Map(
-  "url" -> "jdbc:postgresql:dbserver",
-  "dbtable" -> "schema.tablename"))
+val jdbcDF = sqlContext.read.format("jdbc").options( 
+  Map("url" -> "jdbc:postgresql:dbserver",
+  "dbtable" -> "schema.tablename")).load()
 {% endhighlight %}
 
 </div>
@@ -1669,7 +1860,7 @@ Map<String, String> options = new HashMap<String, String>();
 options.put("url", "jdbc:postgresql:dbserver");
 options.put("dbtable", "schema.tablename");
 
-DataFrame jdbcDF = sqlContext.load("jdbc", options)
+DataFrame jdbcDF = sqlContext.read().format("jdbc"). options(options).load();
 {% endhighlight %}
 
 
@@ -1679,7 +1870,17 @@ DataFrame jdbcDF = sqlContext.load("jdbc", options)
 
 {% highlight python %}
 
-df = sqlContext.load(source="jdbc", url="jdbc:postgresql:dbserver", dbtable="schema.tablename")
+df = sqlContext.read.format('jdbc').options(url='jdbc:postgresql:dbserver', dbtable='schema.tablename').load()
+
+{% endhighlight %}
+
+</div>
+
+<div data-lang="r"  markdown="1">
+
+{% highlight r %}
+
+df <- loadDF(sqlContext, source="jdbc", url="jdbc:postgresql:dbserver", dbtable="schema.tablename")
 
 {% endhighlight %}
 
@@ -1771,11 +1972,10 @@ that these options will be deprecated in future release as more optimizations ar
   </tr>
   <tr>
     <td><code>spark.sql.codegen</code></td>
-    <td>false</td>
+    <td>true</td>
     <td>
       When true, code will be dynamically generated at runtime for expression evaluation in a specific
-      query.  For some queries with complicated expression this option can lead to significant speed-ups.
-      However, for simple queries this can actually slow down query execution.
+      query. For some queries with complicated expression this option can lead to significant speed-ups.
     </td>
   </tr>
   <tr>
@@ -1785,9 +1985,15 @@ that these options will be deprecated in future release as more optimizations ar
       Configures the number of partitions to use when shuffling data for joins or aggregations.
     </td>
   </tr>
+<<<<<<< HEAD
    <tr>
     <td><code>spark.sql.planner.externalSort</code></td>
     <td>false</td>
+=======
+  <tr>
+    <td><code>spark.sql.planner.externalSort</code></td>
+    <td>true</td>
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     <td>
       When true, performs sorts spilling to disk as needed otherwise sort each partition in memory.
     </td>
@@ -1880,7 +2086,11 @@ options.
 #### DataFrame data reader/writer interface
 
 Based on user feedback, we created a new, more fluid API for reading data in (`SQLContext.read`)
+<<<<<<< HEAD
 and writing data out (`DataFrame.write`), 
+=======
+and writing data out (`DataFrame.write`),
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 and deprecated the old APIs (e.g. `SQLContext.parquetFile`, `SQLContext.jsonFile`).
 
 See the API docs for `SQLContext.read` (

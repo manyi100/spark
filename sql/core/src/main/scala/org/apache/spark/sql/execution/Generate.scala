@@ -19,23 +19,33 @@ package org.apache.spark.sql.execution
 
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.catalyst.expressions._
 
 /**
  * For lazy computing, be sure the generator.terminate() called in the very last
  * TODO reusing the CompletionIterator?
  */
+<<<<<<< HEAD
 private[execution] sealed case class LazyIterator(func: () => TraversableOnce[Row])
   extends Iterator[Row] {
 
   lazy val results = func().toIterator
   override def hasNext: Boolean = results.hasNext
   override def next(): Row = results.next()
+=======
+private[execution] sealed case class LazyIterator(func: () => TraversableOnce[InternalRow])
+  extends Iterator[InternalRow] {
+
+  lazy val results = func().toIterator
+  override def hasNext: Boolean = results.hasNext
+  override def next(): InternalRow = results.next()
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }
 
 /**
  * :: DeveloperApi ::
- * Applies a [[catalyst.expressions.Generator Generator]] to a stream of input rows, combining the
+ * Applies a [[Generator]] to a stream of input rows, combining the
  * output of each into a new stream of rows.  This operation is similar to a `flatMap` in functional
  * programming with one important additional feature, which allows the input rows to be joined with
  * their output.
@@ -58,11 +68,19 @@ case class Generate(
 
   val boundGenerator = BindReferences.bindReference(generator, child.output)
 
+<<<<<<< HEAD
   protected override def doExecute(): RDD[Row] = {
     // boundGenerator.terminate() should be triggered after all of the rows in the partition
     if (join) {
       child.execute().mapPartitions { iter =>
         val generatorNullRow = Row.fromSeq(Seq.fill[Any](generator.elementTypes.size)(null))
+=======
+  protected override def doExecute(): RDD[InternalRow] = {
+    // boundGenerator.terminate() should be triggered after all of the rows in the partition
+    if (join) {
+      child.execute().mapPartitions { iter =>
+        val generatorNullRow = InternalRow.fromSeq(Seq.fill[Any](generator.elementTypes.size)(null))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         val joinedRow = new JoinedRow
 
         iter.flatMap { row =>

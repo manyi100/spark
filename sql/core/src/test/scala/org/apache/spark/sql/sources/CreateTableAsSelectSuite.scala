@@ -22,22 +22,36 @@ import java.io.{File, IOException}
 import org.scalatest.BeforeAndAfterAll
 
 import org.apache.spark.sql.AnalysisException
+<<<<<<< HEAD
+=======
+import org.apache.spark.sql.execution.datasources.DDLException
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.util.Utils
 
 class CreateTableAsSelectSuite extends DataSourceTest with BeforeAndAfterAll {
 
+<<<<<<< HEAD
   import caseInsensitiveContext._
+=======
+  import caseInsensitiveContext.sql
+
+  private lazy val sparkContext = caseInsensitiveContext.sparkContext
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   var path: File = null
 
   override def beforeAll(): Unit = {
     path = Utils.createTempDir()
     val rdd = sparkContext.parallelize((1 to 10).map(i => s"""{"a":$i, "b":"str${i}"}"""))
+<<<<<<< HEAD
     read.json(rdd).registerTempTable("jt")
+=======
+    caseInsensitiveContext.read.json(rdd).registerTempTable("jt")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   override def afterAll(): Unit = {
-    dropTempTable("jt")
+    caseInsensitiveContext.dropTempTable("jt")
   }
 
   after {
@@ -59,7 +73,7 @@ class CreateTableAsSelectSuite extends DataSourceTest with BeforeAndAfterAll {
       sql("SELECT a, b FROM jsonTable"),
       sql("SELECT a, b FROM jt").collect())
 
-    dropTempTable("jsonTable")
+    caseInsensitiveContext.dropTempTable("jsonTable")
   }
 
   test("CREATE TEMPORARY TABLE AS SELECT based on the file without write permission") {
@@ -129,7 +143,7 @@ class CreateTableAsSelectSuite extends DataSourceTest with BeforeAndAfterAll {
       sql("SELECT * FROM jsonTable"),
       sql("SELECT a * 4 FROM jt").collect())
 
-    dropTempTable("jsonTable")
+    caseInsensitiveContext.dropTempTable("jsonTable")
     // Explicitly delete the data.
     if (path.exists()) Utils.deleteRecursively(path)
 
@@ -147,7 +161,7 @@ class CreateTableAsSelectSuite extends DataSourceTest with BeforeAndAfterAll {
       sql("SELECT * FROM jsonTable"),
       sql("SELECT b FROM jt").collect())
 
-    dropTempTable("jsonTable")
+    caseInsensitiveContext.dropTempTable("jsonTable")
   }
 
   test("CREATE TEMPORARY TABLE AS SELECT with IF NOT EXISTS is not allowed") {

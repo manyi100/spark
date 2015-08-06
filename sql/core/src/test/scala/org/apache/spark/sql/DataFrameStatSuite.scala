@@ -21,6 +21,7 @@ import java.util.Random
 
 import org.scalatest.Matchers._
 
+<<<<<<< HEAD
 import org.apache.spark.SparkFunSuite
 import org.apache.spark.sql.test.TestSQLContext
 import org.apache.spark.sql.test.TestSQLContext.implicits._
@@ -29,6 +30,16 @@ class DataFrameStatSuite extends SparkFunSuite  {
 
   val sqlCtx = TestSQLContext
   def toLetter(i: Int): String = (i + 97).toChar.toString
+=======
+import org.apache.spark.sql.functions.col
+
+class DataFrameStatSuite extends QueryTest {
+
+  private val sqlCtx = org.apache.spark.sql.test.TestSQLContext
+  import sqlCtx.implicits._
+
+  private def toLetter(i: Int): String = (i + 97).toChar.toString
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   test("pearson correlation") {
     val df = Seq.tabulate(10)(i => (i, 2 * i, i * -1.0)).toDF("a", "b", "c")
@@ -130,4 +141,15 @@ class DataFrameStatSuite extends SparkFunSuite  {
     val items2 = singleColResults.collect().head
     items2.getSeq[Double](0) should contain (-1.0)
   }
+<<<<<<< HEAD
+=======
+
+  test("sampleBy") {
+    val df = sqlCtx.range(0, 100).select((col("id") % 3).as("key"))
+    val sampled = df.stat.sampleBy("key", Map(0 -> 0.1, 1 -> 0.2), 0L)
+    checkAnswer(
+      sampled.groupBy("key").count().orderBy("key"),
+      Seq(Row(0, 5), Row(1, 8)))
+  }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }

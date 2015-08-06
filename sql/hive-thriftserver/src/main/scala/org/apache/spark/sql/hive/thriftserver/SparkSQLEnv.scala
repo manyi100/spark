@@ -22,7 +22,7 @@ import java.io.PrintStream
 import scala.collection.JavaConversions._
 
 import org.apache.spark.scheduler.StatsReportListener
-import org.apache.spark.sql.hive.{HiveShim, HiveContext}
+import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.{Logging, SparkConf, SparkContext}
 import org.apache.spark.util.Utils
 
@@ -38,9 +38,18 @@ private[hive] object SparkSQLEnv extends Logging {
       val sparkConf = new SparkConf(loadDefaults = true)
       val maybeSerializer = sparkConf.getOption("spark.serializer")
       val maybeKryoReferenceTracking = sparkConf.getOption("spark.kryo.referenceTracking")
+      // If user doesn't specify the appName, we want to get [SparkSQL::localHostName] instead of
+      // the default appName [SparkSQLCLIDriver] in cli or beeline.
+      val maybeAppName = sparkConf
+        .getOption("spark.app.name")
+        .filterNot(_ == classOf[SparkSQLCLIDriver].getName)
 
       sparkConf
+<<<<<<< HEAD
         .setAppName(s"SparkSQL::${Utils.localHostName()}")
+=======
+        .setAppName(maybeAppName.getOrElse(s"SparkSQL::${Utils.localHostName()}"))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         .set(
           "spark.serializer",
           maybeSerializer.getOrElse("org.apache.spark.serializer.KryoSerializer"))
@@ -56,7 +65,11 @@ private[hive] object SparkSQLEnv extends Logging {
       hiveContext.metadataHive.setInfo(new PrintStream(System.err, true, "UTF-8"))
       hiveContext.metadataHive.setError(new PrintStream(System.err, true, "UTF-8"))
 
+<<<<<<< HEAD
       hiveContext.setConf("spark.sql.hive.version", HiveShim.version)
+=======
+      hiveContext.setConf("spark.sql.hive.version", HiveContext.hiveExecutionVersion)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
       if (log.isDebugEnabled) {
         hiveContext.hiveconf.getAllProperties.toSeq.sorted.foreach { case (k, v) =>

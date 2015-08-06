@@ -17,6 +17,9 @@
 
 package org.apache.spark.ml
 
+import java.{util => ju}
+
+import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 
 import org.apache.spark.Logging
@@ -80,9 +83,15 @@ abstract class PipelineStage extends Params with Logging {
  */
 @Experimental
 class Pipeline(override val uid: String) extends Estimator[PipelineModel] {
+<<<<<<< HEAD
 
   def this() = this(Identifiable.randomUID("pipeline"))
 
+=======
+
+  def this() = this(Identifiable.randomUID("pipeline"))
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   /**
    * param for pipeline stages
    * @group param
@@ -92,6 +101,11 @@ class Pipeline(override val uid: String) extends Estimator[PipelineModel] {
   /** @group setParam */
   def setStages(value: Array[PipelineStage]): this.type = { set(stages, value); this }
 
+<<<<<<< HEAD
+=======
+  // Below, we clone stages so that modifications to the list of stages will not change
+  // the Param value in the Pipeline.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   /** @group getParam */
   def getStages: Array[PipelineStage] = $(stages).clone()
 
@@ -147,6 +161,7 @@ class Pipeline(override val uid: String) extends Estimator[PipelineModel] {
     }
 
     new PipelineModel(uid, transformers.toArray).setParent(this)
+<<<<<<< HEAD
   }
 
   override def copy(extra: ParamMap): Pipeline = {
@@ -155,6 +170,16 @@ class Pipeline(override val uid: String) extends Estimator[PipelineModel] {
     new Pipeline().setStages(newStages)
   }
 
+=======
+  }
+
+  override def copy(extra: ParamMap): Pipeline = {
+    val map = extractParamMap(extra)
+    val newStages = map(stages).map(_.copy(extra))
+    new Pipeline().setStages(newStages)
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   override def transformSchema(schema: StructType): StructType = {
     val theStages = $(stages)
     require(theStages.toSet.size == theStages.length,
@@ -173,11 +198,24 @@ class PipelineModel private[ml] (
     val stages: Array[Transformer])
   extends Model[PipelineModel] with Logging {
 
+<<<<<<< HEAD
   override def validateParams(): Unit = {
     super.validateParams()
     stages.foreach(_.validateParams())
   }
 
+=======
+  /** A Java/Python-friendly auxiliary constructor. */
+  private[ml] def this(uid: String, stages: ju.List[Transformer]) = {
+    this(uid, stages.asScala.toArray)
+  }
+
+  override def validateParams(): Unit = {
+    super.validateParams()
+    stages.foreach(_.validateParams())
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   override def transform(dataset: DataFrame): DataFrame = {
     transformSchema(dataset.schema, logging = true)
     stages.foldLeft(dataset)((cur, transformer) => transformer.transform(cur))

@@ -178,6 +178,10 @@ public class JavaOneVsRestExample {
     return params;
   }
 
+<<<<<<< HEAD
+=======
+  @SuppressWarnings("static")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   private static Options generateCommandlineOptions() {
     Option input = OptionBuilder.withArgName("input")
       .hasArg()

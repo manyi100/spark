@@ -21,9 +21,8 @@ import java.io.InputStream
 import java.nio.IntBuffer
 import java.util.Comparator
 
-import org.apache.spark.SparkEnv
 import org.apache.spark.serializer.{JavaSerializerInstance, SerializerInstance}
-import org.apache.spark.storage.BlockObjectWriter
+import org.apache.spark.storage.DiskBlockObjectWriter
 import org.apache.spark.util.collection.PartitionedSerializedPairBuffer._
 
 /**
@@ -48,6 +47,11 @@ import org.apache.spark.util.collection.PartitionedSerializedPairBuffer._
  *   |         keyStart         | keyValLen  | partitionId |
  *   +-------------+------------+------------+-------------+
  *
+<<<<<<< HEAD
+=======
+ * The buffer can support up to `536870911 (2 ^ 29 - 1)` records.
+ *
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
  * @param metaInitialRecords The initial number of entries in the metadata buffer.
  * @param kvBlockSize The size of each byte buffer in the ChainedBuffer used to store the records.
  * @param serializerInstance the serializer used for serializing inserted records.
@@ -63,6 +67,8 @@ private[spark] class PartitionedSerializedPairBuffer[K, V](
       " Java-serialized objects.")
   }
 
+  require(metaInitialRecords <= MAXIMUM_RECORDS,
+    s"Can't make capacity bigger than ${MAXIMUM_RECORDS} records")
   private var metaBuffer = IntBuffer.allocate(metaInitialRecords * RECORD_SIZE)
 
   private val kvBuffer: ChainedBuffer = new ChainedBuffer(kvBlockSize)
@@ -89,11 +95,17 @@ private[spark] class PartitionedSerializedPairBuffer[K, V](
 
   /** Double the size of the array because we've reached capacity */
   private def growMetaBuffer(): Unit = {
-    if (metaBuffer.capacity.toLong * 2 > Int.MaxValue) {
-      // Doubling the capacity would create an array bigger than Int.MaxValue, so don't
-      throw new Exception(s"Can't grow buffer beyond ${Int.MaxValue} bytes")
+    if (metaBuffer.capacity >= MAXIMUM_META_BUFFER_CAPACITY) {
+      throw new IllegalStateException(s"Can't insert more than ${MAXIMUM_RECORDS} records")
     }
-    val newMetaBuffer = IntBuffer.allocate(metaBuffer.capacity * 2)
+    val newCapacity =
+      if (metaBuffer.capacity * 2 < 0 || metaBuffer.capacity * 2 > MAXIMUM_META_BUFFER_CAPACITY) {
+        // Overflow
+        MAXIMUM_META_BUFFER_CAPACITY
+      } else {
+        metaBuffer.capacity * 2
+      }
+    val newMetaBuffer = IntBuffer.allocate(newCapacity)
     newMetaBuffer.put(metaBuffer.array)
     metaBuffer = newMetaBuffer
   }
@@ -122,15 +134,15 @@ private[spark] class PartitionedSerializedPairBuffer[K, V](
   override def destructiveSortedWritablePartitionedIterator(keyComparator: Option[Comparator[K]])
     : WritablePartitionedIterator = {
     sort(keyComparator)
-    writablePartitionedIterator
-  }
-
-  override def writablePartitionedIterator(): WritablePartitionedIterator = {
     new WritablePartitionedIterator {
       // current position in the meta buffer in ints
       var pos = 0
 
+<<<<<<< HEAD
       def writeNext(writer: BlockObjectWriter): Unit = {
+=======
+      def writeNext(writer: DiskBlockObjectWriter): Unit = {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         val keyStart = getKeyStartPos(metaBuffer, pos)
         val keyValLen = metaBuffer.get(pos + KEY_VAL_LEN)
         pos += RECORD_SIZE
@@ -251,12 +263,22 @@ private[spark] class SerializedSortDataFormat extends SortDataFormat[Int, IntBuf
   }
 }
 
+<<<<<<< HEAD
 private[spark] object PartitionedSerializedPairBuffer {
+=======
+private object PartitionedSerializedPairBuffer {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   val KEY_START = 0 // keyStart, a long, gets split across two ints
   val KEY_VAL_LEN = 2
   val PARTITION = 3
   val RECORD_SIZE = PARTITION + 1 // num ints of metadata
 
+<<<<<<< HEAD
+=======
+  val MAXIMUM_RECORDS = Int.MaxValue / RECORD_SIZE // (2 ^ 29) - 1
+  val MAXIMUM_META_BUFFER_CAPACITY = MAXIMUM_RECORDS * RECORD_SIZE // (2 ^ 31) - 4
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   def getKeyStartPos(metaBuffer: IntBuffer, metaBufferPos: Int): Long = {
     val lower32 = metaBuffer.get(metaBufferPos + KEY_START)
     val upper32 = metaBuffer.get(metaBufferPos + KEY_START + 1)

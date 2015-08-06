@@ -402,6 +402,17 @@ class Column(protected[sql] val expr: Expression) extends Logging {
   }
 
   /**
+<<<<<<< HEAD
+=======
+   * True if the current expression is NaN.
+   *
+   * @group expr_ops
+   * @since 1.5.0
+   */
+  def isNaN: Column = IsNaN(expr)
+
+  /**
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    * True if the current expression is null.
    *
    * @group expr_ops
@@ -621,7 +632,7 @@ class Column(protected[sql] val expr: Expression) extends Logging {
    * @since 1.3.0
    */
   @scala.annotation.varargs
-  def in(list: Column*): Column = In(expr, list.map(_.expr))
+  def in(list: Any*): Column = In(expr, list.map(lit(_).expr))
 
   /**
    * SQL like expression.
@@ -861,11 +872,13 @@ class Column(protected[sql] val expr: Expression) extends Logging {
    * @since 1.3.0
    */
   def explain(extended: Boolean): Unit = {
+    // scalastyle:off println
     if (extended) {
       println(expr)
     } else {
       println(expr.prettyString)
     }
+    // scalastyle:on println
   }
 
   /**
@@ -987,7 +1000,11 @@ class ColumnName(name: String) extends Column(name) {
    * Creates a new [[StructField]] of type decimal.
    * @since 1.3.0
    */
+<<<<<<< HEAD
   def decimal: StructField = StructField(name, DecimalType.Unlimited)
+=======
+  def decimal: StructField = StructField(name, DecimalType.USER_DEFAULT)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   /**
    * Creates a new [[StructField]] of type decimal.

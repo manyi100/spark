@@ -20,6 +20,10 @@ package org.apache.spark.graphx.util
 import org.apache.spark.SparkFunSuite
 
 
+<<<<<<< HEAD
+=======
+// scalastyle:off println
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 class BytecodeUtilsSuite extends SparkFunSuite {
 
   import BytecodeUtilsSuite.TestClass
@@ -102,6 +106,7 @@ class BytecodeUtilsSuite extends SparkFunSuite {
   private val c = {e: TestClass => println(e.baz)}
 }
 
+// scalastyle:on println
 
 object BytecodeUtilsSuite {
   class TestClass(val foo: Int, val bar: Long) {

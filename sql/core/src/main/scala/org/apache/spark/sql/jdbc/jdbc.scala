@@ -89,8 +89,7 @@ package object jdbc {
                   case BinaryType => stmt.setBytes(i + 1, row.getAs[Array[Byte]](i))
                   case TimestampType => stmt.setTimestamp(i + 1, row.getAs[java.sql.Timestamp](i))
                   case DateType => stmt.setDate(i + 1, row.getAs[java.sql.Date](i))
-                  case DecimalType.Unlimited => stmt.setBigDecimal(i + 1,
-                      row.getAs[java.math.BigDecimal](i))
+                  case t: DecimalType => stmt.setBigDecimal(i + 1, row.getDecimal(i))
                   case _ => throw new IllegalArgumentException(
                       s"Can't translate non-null value for field $i")
                 }
@@ -145,7 +144,11 @@ package object jdbc {
             case BinaryType => "BLOB"
             case TimestampType => "TIMESTAMP"
             case DateType => "DATE"
+<<<<<<< HEAD
             case DecimalType.Unlimited => "DECIMAL(40,20)"
+=======
+            case t: DecimalType => s"DECIMAL(${t.precision}},${t.scale}})"
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
             case _ => throw new IllegalArgumentException(s"Don't know how to save $field to JDBC")
           })
         val nullable = if (field.nullable) "" else "NOT NULL"
@@ -177,7 +180,7 @@ package object jdbc {
             case BinaryType => java.sql.Types.BLOB
             case TimestampType => java.sql.Types.TIMESTAMP
             case DateType => java.sql.Types.DATE
-            case DecimalType.Unlimited => java.sql.Types.DECIMAL
+            case t: DecimalType => java.sql.Types.DECIMAL
             case _ => throw new IllegalArgumentException(
               s"Can't translate null value for field $field")
           })

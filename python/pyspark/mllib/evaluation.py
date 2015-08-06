@@ -82,7 +82,11 @@ class RegressionMetrics(JavaModelWrapper):
     ...     (2.5, 3.0), (0.0, -0.5), (2.0, 2.0), (8.0, 7.0)])
     >>> metrics = RegressionMetrics(predictionAndObservations)
     >>> metrics.explainedVariance
+<<<<<<< HEAD
     0.95...
+=======
+    8.859...
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     >>> metrics.meanAbsoluteError
     0.5...
     >>> metrics.meanSquaredError
@@ -152,6 +156,13 @@ class MulticlassMetrics(JavaModelWrapper):
     >>> predictionAndLabels = sc.parallelize([(0.0, 0.0), (0.0, 1.0), (0.0, 0.0),
     ...     (1.0, 0.0), (1.0, 1.0), (1.0, 1.0), (1.0, 1.0), (2.0, 2.0), (2.0, 0.0)])
     >>> metrics = MulticlassMetrics(predictionAndLabels)
+<<<<<<< HEAD
+=======
+    >>> metrics.confusionMatrix().toArray()
+    array([[ 2.,  1.,  1.],
+           [ 1.,  3.,  0.],
+           [ 0.,  0.,  1.]])
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     >>> metrics.falsePositiveRate(0.0)
     0.2...
     >>> metrics.precision(1.0)
@@ -186,6 +197,16 @@ class MulticlassMetrics(JavaModelWrapper):
         java_model = java_class(df._jdf)
         super(MulticlassMetrics, self).__init__(java_model)
 
+<<<<<<< HEAD
+=======
+    def confusionMatrix(self):
+        """
+        Returns confusion matrix: predicted classes are in columns,
+        they are ordered by class label ascending, as in "labels".
+        """
+        return self.call("confusionMatrix")
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     def truePositiveRate(self, label):
         """
         Returns true positive rate for a given label (category).

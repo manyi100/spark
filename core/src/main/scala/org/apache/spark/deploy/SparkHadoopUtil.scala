@@ -25,6 +25,10 @@ import java.util.{Arrays, Comparator}
 import scala.collection.JavaConversions._
 import scala.concurrent.duration._
 import scala.language.postfixOps
+<<<<<<< HEAD
+=======
+import scala.util.control.NonFatal
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 import com.google.common.primitives.Longs
 import org.apache.hadoop.conf.Configuration
@@ -178,7 +182,7 @@ class SparkHadoopUtil extends Logging {
 
   private def getFileSystemThreadStatisticsMethod(methodName: String): Method = {
     val statisticsDataClass =
-      Class.forName("org.apache.hadoop.fs.FileSystem$Statistics$StatisticsData")
+      Utils.classForName("org.apache.hadoop.fs.FileSystem$Statistics$StatisticsData")
     statisticsDataClass.getDeclaredMethod(methodName)
   }
 
@@ -236,6 +240,17 @@ class SparkHadoopUtil extends Logging {
     Option(fs.globStatus(pattern)).map { statuses =>
       statuses.map(_.getPath.makeQualified(fs.getUri, fs.getWorkingDirectory)).toSeq
     }.getOrElse(Seq.empty[Path])
+<<<<<<< HEAD
+=======
+  }
+
+  def globPathIfNecessary(pattern: Path): Seq[Path] = {
+    if (pattern.toString.exists("{}[]*?\\".toSet.contains)) {
+      globPath(pattern)
+    } else {
+      Seq(pattern)
+    }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   /**
@@ -248,19 +263,25 @@ class SparkHadoopUtil extends Logging {
       dir: Path,
       prefix: String,
       exclusionSuffix: String): Array[FileStatus] = {
-    val fileStatuses = remoteFs.listStatus(dir,
-      new PathFilter {
-        override def accept(path: Path): Boolean = {
-          val name = path.getName
-          name.startsWith(prefix) && !name.endsWith(exclusionSuffix)
+    try {
+      val fileStatuses = remoteFs.listStatus(dir,
+        new PathFilter {
+          override def accept(path: Path): Boolean = {
+            val name = path.getName
+            name.startsWith(prefix) && !name.endsWith(exclusionSuffix)
+          }
+        })
+      Arrays.sort(fileStatuses, new Comparator[FileStatus] {
+        override def compare(o1: FileStatus, o2: FileStatus): Int = {
+          Longs.compare(o1.getModificationTime, o2.getModificationTime)
         }
       })
-    Arrays.sort(fileStatuses, new Comparator[FileStatus] {
-      override def compare(o1: FileStatus, o2: FileStatus): Int = {
-        Longs.compare(o1.getModificationTime, o2.getModificationTime)
-      }
-    })
-    fileStatuses
+      fileStatuses
+    } catch {
+      case NonFatal(e) =>
+        logWarning("Error while attempting to list files from application staging dir", e)
+        Array.empty
+    }
   }
 
   /**
@@ -334,6 +355,19 @@ class SparkHadoopUtil extends Logging {
    * Stop the thread that does the delegation token updates.
    */
   private[spark] def stopExecutorDelegationTokenRenewer() {}
+
+  /**
+   * Return a fresh Hadoop configuration, bypassing the HDFS cache mechanism.
+   * This is to prevent the DFSClient from using an old cached token to connect to the NameNode.
+   */
+  private[spark] def getConfBypassingFSCache(
+      hadoopConf: Configuration,
+      scheme: String): Configuration = {
+    val newConf = new Configuration(hadoopConf)
+    val confKey = s"fs.${scheme}.impl.disable.cache"
+    newConf.setBoolean(confKey, true)
+    newConf
+  }
 }
 
 object SparkHadoopUtil {
@@ -343,7 +377,7 @@ object SparkHadoopUtil {
         System.getProperty("SPARK_YARN_MODE", System.getenv("SPARK_YARN_MODE")))
     if (yarnMode) {
       try {
-        Class.forName("org.apache.spark.deploy.yarn.YarnSparkHadoopUtil")
+        Utils.classForName("org.apache.spark.deploy.yarn.YarnSparkHadoopUtil")
           .newInstance()
           .asInstanceOf[SparkHadoopUtil]
       } catch {

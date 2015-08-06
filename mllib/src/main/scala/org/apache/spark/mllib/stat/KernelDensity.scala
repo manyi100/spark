@@ -37,6 +37,10 @@ import org.apache.spark.rdd.RDD
  *   .setBandwidth(3.0)
  * val densities = kd.estimate(Array(-1.0, 2.0, 5.0))
  * }}}
+<<<<<<< HEAD
+=======
+ * @since 1.4.0
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
  */
 @Experimental
 class KernelDensity extends Serializable {
@@ -51,6 +55,10 @@ class KernelDensity extends Serializable {
 
   /**
    * Sets the bandwidth (standard deviation) of the Gaussian kernel (default: `1.0`).
+<<<<<<< HEAD
+=======
+   * @since 1.4.0
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    */
   def setBandwidth(bandwidth: Double): this.type = {
     require(bandwidth > 0, s"Bandwidth must be positive, but got $bandwidth.")
@@ -60,6 +68,10 @@ class KernelDensity extends Serializable {
 
   /**
    * Sets the sample to use for density estimation.
+<<<<<<< HEAD
+=======
+   * @since 1.4.0
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    */
   def setSample(sample: RDD[Double]): this.type = {
     this.sample = sample
@@ -68,6 +80,10 @@ class KernelDensity extends Serializable {
 
   /**
    * Sets the sample to use for density estimation (for Java users).
+<<<<<<< HEAD
+=======
+   * @since 1.4.0
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    */
   def setSample(sample: JavaRDD[java.lang.Double]): this.type = {
     this.sample = sample.rdd.asInstanceOf[RDD[Double]]
@@ -76,6 +92,10 @@ class KernelDensity extends Serializable {
 
   /**
    * Estimates probability density function at the given array of points.
+<<<<<<< HEAD
+=======
+   * @since 1.4.0
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    */
   def estimate(points: Array[Double]): Array[Double] = {
     val sample = this.sample

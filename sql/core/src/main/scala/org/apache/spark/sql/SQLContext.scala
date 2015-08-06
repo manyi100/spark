@@ -31,17 +31,30 @@ import org.apache.spark.SparkContext
 import org.apache.spark.annotation.{DeveloperApi, Experimental}
 import org.apache.spark.api.java.{JavaRDD, JavaSparkContext}
 import org.apache.spark.rdd.RDD
+<<<<<<< HEAD
 import org.apache.spark.sql.catalyst._
+=======
+import org.apache.spark.sql.SQLConf.SQLConfEntry
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.catalyst.analysis._
-import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.errors.DialectException
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.optimizer.{DefaultOptimizer, Optimizer}
 import org.apache.spark.sql.catalyst.plans.logical.{LocalRelation, LogicalPlan}
 import org.apache.spark.sql.catalyst.rules.RuleExecutor
+<<<<<<< HEAD
 import org.apache.spark.sql.catalyst.ParserDialect
 import org.apache.spark.sql.execution.{Filter, _}
 import org.apache.spark.sql.sources._
+=======
+import org.apache.spark.sql.catalyst.{InternalRow, ParserDialect, _}
+import org.apache.spark.sql.execution._
+import org.apache.spark.sql.execution.datasources._
+import org.apache.spark.sql.sources.BaseRelation
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.ui.{SQLListener, SQLTab}
+import org.apache.spark.unsafe.types.UTF8String
 import org.apache.spark.util.Utils
 
 /**
@@ -71,6 +84,14 @@ class SQLContext(@transient val sparkContext: SparkContext)
    * @return Spark SQL configuration
    */
   protected[sql] def conf = currentSession().conf
+<<<<<<< HEAD
+=======
+
+  // `listener` should be only used in the driver
+  @transient private[sql] val listener = new SQLListener(this)
+  sparkContext.addSparkListener(listener)
+  sparkContext.ui.foreach(new SQLTab(this, _))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   /**
    * Set Spark SQL configuration properties.
@@ -80,21 +101,42 @@ class SQLContext(@transient val sparkContext: SparkContext)
    */
   def setConf(props: Properties): Unit = conf.setConf(props)
 
+  /** Set the given Spark SQL configuration property. */
+  private[sql] def setConf[T](entry: SQLConfEntry[T], value: T): Unit = conf.setConf(entry, value)
+
   /**
    * Set the given Spark SQL configuration property.
    *
    * @group config
    * @since 1.0.0
    */
-  def setConf(key: String, value: String): Unit = conf.setConf(key, value)
+  def setConf(key: String, value: String): Unit = conf.setConfString(key, value)
 
   /**
    * Return the value of Spark SQL configuration property for the given key.
    *
    * @group config
    * @since 1.0.0
+<<<<<<< HEAD
+=======
    */
-  def getConf(key: String): String = conf.getConf(key)
+  def getConf(key: String): String = conf.getConfString(key)
+
+  /**
+   * Return the value of Spark SQL configuration property for the given key. If the key is not set
+   * yet, return `defaultValue` in [[SQLConfEntry]].
+   */
+  private[sql] def getConf[T](entry: SQLConfEntry[T]): T = conf.getConf(entry)
+
+  /**
+   * Return the value of Spark SQL configuration property for the given key. If the key is not set
+   * yet, return `defaultValue`. This is useful when `defaultValue` in SQLConfEntry is not the
+   * desired one.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+   */
+  private[sql] def getConf[T](entry: SQLConfEntry[T], defaultValue: T): T = {
+    conf.getConf(entry, defaultValue)
+  }
 
   /**
    * Return the value of Spark SQL configuration property for the given key. If the key is not set
@@ -103,7 +145,7 @@ class SQLContext(@transient val sparkContext: SparkContext)
    * @group config
    * @since 1.0.0
    */
-  def getConf(key: String, defaultValue: String): String = conf.getConf(key, defaultValue)
+  def getConf(key: String, defaultValue: String): String = conf.getConfString(key, defaultValue)
 
   /**
    * Return all the configuration properties that have been set (i.e. not the default).
@@ -120,18 +162,22 @@ class SQLContext(@transient val sparkContext: SparkContext)
 
   // TODO how to handle the temp function per user session?
   @transient
+<<<<<<< HEAD
   protected[sql] lazy val functionRegistry: FunctionRegistry = new SimpleFunctionRegistry(conf)
+=======
+  protected[sql] lazy val functionRegistry: FunctionRegistry = FunctionRegistry.builtin
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   @transient
   protected[sql] lazy val analyzer: Analyzer =
     new Analyzer(catalog, functionRegistry, conf) {
       override val extendedResolutionRules =
-        ExtractPythonUdfs ::
-        sources.PreInsertCastAndRename ::
+        ExtractPythonUDFs ::
+        PreInsertCastAndRename ::
         Nil
 
       override val extendedCheckRules = Seq(
-        sources.PreWriteCheck(catalog)
+        datasources.PreWriteCheck(catalog)
       )
     }
 
@@ -237,7 +283,7 @@ class SQLContext(@transient val sparkContext: SparkContext)
    *
    * The following example registers a Scala closure as UDF:
    * {{{
-   *   sqlContext.udf.register("myUdf", (arg1: Int, arg2: String) => arg2 + arg1)
+   *   sqlContext.udf.register("myUDF", (arg1: Int, arg2: String) => arg2 + arg1)
    * }}}
    *
    * The following example registers a UDF in Java:
@@ -264,6 +310,9 @@ class SQLContext(@transient val sparkContext: SparkContext)
    */
   @transient
   val udf: UDFRegistration = new UDFRegistration(this)
+
+  @transient
+  val udaf: UDAFRegistration = new UDAFRegistration(this)
 
   /**
    * Returns true if the table is currently cached in-memory.
@@ -358,10 +407,11 @@ class SQLContext(@transient val sparkContext: SparkContext)
         val row = new SpecificMutableRow(dataType :: Nil)
         iter.map { v =>
           row.setInt(0, v)
-          row: Row
+          row: InternalRow
         }
       }
-      DataFrameHolder(self.createDataFrame(rows, StructType(StructField("_1", dataType) :: Nil)))
+      DataFrameHolder(
+        self.internalCreateDataFrame(rows, StructType(StructField("_1", dataType) :: Nil)))
     }
 
     /**
@@ -374,10 +424,11 @@ class SQLContext(@transient val sparkContext: SparkContext)
         val row = new SpecificMutableRow(dataType :: Nil)
         iter.map { v =>
           row.setLong(0, v)
-          row: Row
+          row: InternalRow
         }
       }
-      DataFrameHolder(self.createDataFrame(rows, StructType(StructField("_1", dataType) :: Nil)))
+      DataFrameHolder(
+        self.internalCreateDataFrame(rows, StructType(StructField("_1", dataType) :: Nil)))
     }
 
     /**
@@ -389,11 +440,12 @@ class SQLContext(@transient val sparkContext: SparkContext)
       val rows = data.mapPartitions { iter =>
         val row = new SpecificMutableRow(dataType :: Nil)
         iter.map { v =>
-          row.setString(0, v)
-          row: Row
+          row.update(0, UTF8String.fromString(v))
+          row: InternalRow
         }
       }
-      DataFrameHolder(self.createDataFrame(rows, StructType(StructField("_1", dataType) :: Nil)))
+      DataFrameHolder(
+        self.internalCreateDataFrame(rows, StructType(StructField("_1", dataType) :: Nil)))
     }
   }
 
@@ -485,10 +537,22 @@ class SQLContext(@transient val sparkContext: SparkContext)
     // schema differs from the existing schema on any field data type.
     val catalystRows = if (needsConversion) {
       val converter = CatalystTypeConverters.createToCatalystConverter(schema)
-      rowRDD.map(converter(_).asInstanceOf[Row])
+      rowRDD.map(converter(_).asInstanceOf[InternalRow])
     } else {
-      rowRDD
+      rowRDD.map{r: Row => InternalRow.fromSeq(r.toSeq)}
     }
+    val logicalPlan = LogicalRDD(schema.toAttributes, catalystRows)(self)
+    DataFrame(this, logicalPlan)
+  }
+
+  /**
+   * Creates a DataFrame from an RDD[Row]. User can specify whether the input rows should be
+   * converted to Catalyst rows.
+   */
+  private[sql]
+  def internalCreateDataFrame(catalystRows: RDD[InternalRow], schema: StructType) = {
+    // TODO: use MutableProjection when rowRDD is another DataFrame and the applied
+    // schema differs from the existing schema on any field data type.
     val logicalPlan = LogicalRDD(schema.toAttributes, catalystRows)(self)
     DataFrame(this, logicalPlan)
   }
@@ -520,17 +584,16 @@ class SQLContext(@transient val sparkContext: SparkContext)
     val className = beanClass.getName
     val rowRdd = rdd.mapPartitions { iter =>
       // BeanInfo is not serializable so we must rediscover it remotely for each partition.
-      val localBeanInfo = Introspector.getBeanInfo(
-        Class.forName(className, true, Utils.getContextOrSparkClassLoader))
+      val localBeanInfo = Introspector.getBeanInfo(Utils.classForName(className))
       val extractors =
         localBeanInfo.getPropertyDescriptors.filterNot(_.getName == "class").map(_.getReadMethod)
-
+      val methodsToConverts = extractors.zip(attributeSeq).map { case (e, attr) =>
+        (e, CatalystTypeConverters.createToCatalystConverter(attr.dataType))
+      }
       iter.map { row =>
-        new GenericRow(
-          extractors.zip(attributeSeq).map { case (e, attr) =>
-            CatalystTypeConverters.convertToCatalyst(e.invoke(row), attr.dataType)
-          }.toArray[Any]
-        ) : Row
+        new GenericInternalRow(
+          methodsToConverts.map { case (e, convert) => convert(e.invoke(row)) }.toArray[Any]
+        ): InternalRow
       }
     }
     DataFrame(this, LogicalRDD(attributeSeq, rowRdd)(this))
@@ -639,6 +702,8 @@ class SQLContext(@transient val sparkContext: SparkContext)
    * :: Experimental ::
    * Create an external table from the given path based on a data source, a schema and
    * a set of options. Then, returns the corresponding DataFrame.
+<<<<<<< HEAD
+=======
    *
    * @group ddl_ops
    * @since 1.3.0
@@ -653,6 +718,122 @@ class SQLContext(@transient val sparkContext: SparkContext)
   }
 
   /**
+   * :: Experimental ::
+   * (Scala-specific)
+   * Create an external table from the given path based on a data source, a schema and
+   * a set of options. Then, returns the corresponding DataFrame.
+   *
+   * @group ddl_ops
+   * @since 1.3.0
+   */
+  @Experimental
+  def createExternalTable(
+      tableName: String,
+      source: String,
+      schema: StructType,
+      options: Map[String, String]): DataFrame = {
+    val cmd =
+      CreateTableUsing(
+        tableName,
+        userSpecifiedSchema = Some(schema),
+        source,
+        temporary = false,
+        options,
+        allowExisting = false,
+        managedIfNoPath = false)
+    executePlan(cmd).toRdd
+    table(tableName)
+  }
+
+  /**
+   * Registers the given [[DataFrame]] as a temporary table in the catalog. Temporary tables exist
+   * only during the lifetime of this instance of SQLContext.
+   */
+  private[sql] def registerDataFrameAsTable(df: DataFrame, tableName: String): Unit = {
+    catalog.registerTable(Seq(tableName), df.logicalPlan)
+  }
+
+  /**
+   * Drops the temporary table with the given table name in the catalog. If the table has been
+   * cached/persisted before, it's also unpersisted.
+   *
+   * @param tableName the name of the table to be unregistered.
+   *
+   * @group basic
+   * @since 1.3.0
+   */
+  def dropTempTable(tableName: String): Unit = {
+    cacheManager.tryUncacheQuery(table(tableName))
+    catalog.unregisterTable(Seq(tableName))
+  }
+
+  /**
+   * :: Experimental ::
+   * Creates a [[DataFrame]] with a single [[LongType]] column named `id`, containing elements
+   * in an range from 0 to `end` (exclusive) with step value 1.
+   *
+   * @since 1.4.1
+   * @group dataframe
+   */
+  @Experimental
+  def range(end: Long): DataFrame = range(0, end)
+
+  /**
+   * :: Experimental ::
+   * Creates a [[DataFrame]] with a single [[LongType]] column named `id`, containing elements
+   * in an range from `start` to `end` (exclusive) with step value 1.
+   *
+   * @since 1.4.0
+   * @group dataframe
+   */
+  @Experimental
+  def range(start: Long, end: Long): DataFrame = {
+    createDataFrame(
+      sparkContext.range(start, end).map(Row(_)),
+      StructType(StructField("id", LongType, nullable = false) :: Nil))
+  }
+
+  /**
+   * :: Experimental ::
+   * Creates a [[DataFrame]] with a single [[LongType]] column named `id`, containing elements
+   * in an range from `start` to `end` (exclusive) with an step value, with partition number
+   * specified.
+   *
+   * @since 1.4.0
+   * @group dataframe
+   */
+  @Experimental
+  def range(start: Long, end: Long, step: Long, numPartitions: Int): DataFrame = {
+    createDataFrame(
+      sparkContext.range(start, end, step, numPartitions).map(Row(_)),
+      StructType(StructField("id", LongType, nullable = false) :: Nil))
+  }
+
+  /**
+   * Executes a SQL query using Spark, returning the result as a [[DataFrame]]. The dialect that is
+   * used for SQL parsing can be configured with 'spark.sql.dialect'.
+   *
+   * @group basic
+   * @since 1.3.0
+   */
+  def sql(sqlText: String): DataFrame = {
+    DataFrame(this, parseSql(sqlText))
+  }
+
+  /**
+   * Returns the specified table as a [[DataFrame]].
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+   *
+   * @group ddl_ops
+   * @since 1.3.0
+   */
+  def table(tableName: String): DataFrame = {
+    val tableIdent = new SqlParser().parseTableIdentifier(tableName)
+    DataFrame(this, catalog.lookupRelation(tableIdent.toSeq))
+  }
+
+  /**
+<<<<<<< HEAD
    * :: Experimental ::
    * (Scala-specific)
    * Create an external table from the given path based on a data source, a schema and
@@ -765,6 +946,8 @@ class SQLContext(@transient val sparkContext: SparkContext)
     DataFrame(this, catalog.lookupRelation(Seq(tableName)))
 
   /**
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    * Returns a [[DataFrame]] containing names of existing tables in the current database.
    * The returned DataFrame has two columns, tableName and isTemporary (a Boolean
    * indicating if a table is a temporary one or not).
@@ -827,12 +1010,12 @@ class SQLContext(@transient val sparkContext: SparkContext)
       experimental.extraStrategies ++ (
       DataSourceStrategy ::
       DDLStrategy ::
-      TakeOrdered ::
+      TakeOrderedAndProject ::
       HashAggregation ::
+      Aggregation ::
       LeftSemiJoin ::
       HashJoin ::
       InMemoryScans ::
-      ParquetOperations ::
       BasicOperators ::
       CartesianProduct ::
       BroadcastNestedLoopJoin :: Nil)
@@ -885,15 +1068,18 @@ class SQLContext(@transient val sparkContext: SparkContext)
   protected[sql] val planner = new SparkPlanner
 
   @transient
-  protected[sql] lazy val emptyResult = sparkContext.parallelize(Seq.empty[Row], 1)
+  protected[sql] lazy val emptyResult = sparkContext.parallelize(Seq.empty[InternalRow], 1)
 
   /**
-   * Prepares a planned SparkPlan for execution by inserting shuffle operations as needed.
+   * Prepares a planned SparkPlan for execution by inserting shuffle operations and internal
+   * row format conversions as needed.
    */
   @transient
   protected[sql] val prepareForExecution = new RuleExecutor[SparkPlan] {
-    val batches =
-      Batch("Add exchange", Once, EnsureRequirements(self)) :: Nil
+    val batches = Seq(
+      Batch("Add exchange", Once, EnsureRequirements(self)),
+      Batch("Add row converters", Once, EnsureRowFormats)
+    )
   }
 
   protected[sql] def openSession(): SQLSession = {
@@ -914,6 +1100,11 @@ class SQLContext(@transient val sparkContext: SparkContext)
 
   protected[sql] def detachSession(): Unit = {
     tlSession.remove()
+  }
+
+  protected[sql] def setSession(session: SQLSession): Unit = {
+    detachSession()
+    tlSession.set(session)
   }
 
   protected[sql] class SQLSession {
@@ -947,7 +1138,7 @@ class SQLContext(@transient val sparkContext: SparkContext)
     lazy val executedPlan: SparkPlan = prepareForExecution.execute(sparkPlan)
 
     /** Internal version of the RDD. Avoids copies and has no schema */
-    lazy val toRdd: RDD[Row] = executedPlan.execute()
+    lazy val toRdd: RDD[InternalRow] = executedPlan.execute()
 
     protected def stringOrError[A](f: => A): String =
       try f.toString catch { case e: Throwable => e.toString }
@@ -1005,33 +1196,7 @@ class SQLContext(@transient val sparkContext: SparkContext)
       rdd: RDD[Array[Any]],
       schema: StructType): DataFrame = {
 
-    def needsConversion(dataType: DataType): Boolean = dataType match {
-      case ByteType => true
-      case ShortType => true
-      case LongType => true
-      case FloatType => true
-      case DateType => true
-      case TimestampType => true
-      case StringType => true
-      case ArrayType(_, _) => true
-      case MapType(_, _, _) => true
-      case StructType(_) => true
-      case udt: UserDefinedType[_] => needsConversion(udt.sqlType)
-      case other => false
-    }
-
-    val convertedRdd = if (schema.fields.exists(f => needsConversion(f.dataType))) {
-      rdd.map(m => m.zip(schema.fields).map {
-        case (value, field) => EvaluatePython.fromJava(value, field.dataType)
-      })
-    } else {
-      rdd
-    }
-
-    val rowRdd = convertedRdd.mapPartitions { iter =>
-      iter.map { m => new GenericRow(m): Row}
-    }
-
+    val rowRdd = rdd.map(r => EvaluatePython.fromJava(r, schema).asInstanceOf[InternalRow])
     DataFrame(this, LogicalRDD(schema.toAttributes, rowRdd)(self))
   }
 
@@ -1095,11 +1260,16 @@ class SQLContext(@transient val sparkContext: SparkContext)
   def parquetFile(paths: String*): DataFrame = {
     if (paths.isEmpty) {
       emptyDataFrame
+<<<<<<< HEAD
     } else if (conf.parquetUseDataSourceApi) {
       read.parquet(paths : _*)
     } else {
       DataFrame(this, parquet.ParquetRelation(
         paths.mkString(","), Some(sparkContext.hadoopConfiguration), this))
+=======
+    } else {
+      read.parquet(paths : _*)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -1350,6 +1520,7 @@ class SQLContext(@transient val sparkContext: SparkContext)
 object SQLContext {
 
   private val INSTANTIATION_LOCK = new Object()
+<<<<<<< HEAD
 
   /**
    * Reference to the last created SQLContext.
@@ -1370,6 +1541,28 @@ object SQLContext {
     lastInstantiatedContext.get()
   }
 
+=======
+
+  /**
+   * Reference to the last created SQLContext.
+   */
+  @transient private val lastInstantiatedContext = new AtomicReference[SQLContext]()
+
+  /**
+   * Get the singleton SQLContext if it exists or create a new one using the given SparkContext.
+   * This function can be used to create a singleton SQLContext object that can be shared across
+   * the JVM.
+   */
+  def getOrCreate(sparkContext: SparkContext): SQLContext = {
+    INSTANTIATION_LOCK.synchronized {
+      if (lastInstantiatedContext.get() == null) {
+        new SQLContext(sparkContext)
+      }
+    }
+    lastInstantiatedContext.get()
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   private[sql] def clearLastInstantiatedContext(): Unit = {
     INSTANTIATION_LOCK.synchronized {
       lastInstantiatedContext.set(null)

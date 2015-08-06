@@ -34,7 +34,11 @@ LIB_DIR="$FWDIR/lib"
 
 mkdir -p $LIB_DIR
 
+<<<<<<< HEAD
 pushd $FWDIR
+=======
+pushd $FWDIR > /dev/null
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 # Generate Rd files if devtools is installed
 Rscript -e ' if("devtools" %in% rownames(installed.packages())) { library(devtools); devtools::document(pkg="./pkg", roclets=c("rd")) }'
@@ -42,4 +46,8 @@ Rscript -e ' if("devtools" %in% rownames(installed.packages())) { library(devtoo
 # Install SparkR to $LIB_DIR
 R CMD INSTALL --library=$LIB_DIR $FWDIR/pkg/
 
+<<<<<<< HEAD
 popd
+=======
+popd > /dev/null
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

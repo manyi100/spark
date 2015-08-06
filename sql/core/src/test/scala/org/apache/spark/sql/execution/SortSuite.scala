@@ -17,6 +17,10 @@
 
 package org.apache.spark.sql.execution
 
+<<<<<<< HEAD
+=======
+import org.apache.spark.sql.Row
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.catalyst.dsl.expressions._
 
 class SortSuite extends SparkPlanTest {
@@ -33,6 +37,7 @@ class SortSuite extends SparkPlanTest {
 
     checkAnswer(
       input.toDF("a", "b", "c"),
+<<<<<<< HEAD
       ExternalSort('a.asc :: 'b.asc :: Nil, global = false, _: SparkPlan),
       input.sorted)
 
@@ -40,5 +45,16 @@ class SortSuite extends SparkPlanTest {
       input.toDF("a", "b", "c"),
       ExternalSort('b.asc :: 'a.asc :: Nil, global = false, _: SparkPlan),
       input.sortBy(t => (t._2, t._1)))
+=======
+      ExternalSort('a.asc :: 'b.asc :: Nil, global = true, _: SparkPlan),
+      input.sortBy(t => (t._1, t._2)).map(Row.fromTuple),
+      sortAnswers = false)
+
+    checkAnswer(
+      input.toDF("a", "b", "c"),
+      ExternalSort('b.asc :: 'a.asc :: Nil, global = true, _: SparkPlan),
+      input.sortBy(t => (t._2, t._1)).map(Row.fromTuple),
+      sortAnswers = false)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }

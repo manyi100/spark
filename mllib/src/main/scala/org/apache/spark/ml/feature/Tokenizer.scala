@@ -42,7 +42,11 @@ class Tokenizer(override val uid: String) extends UnaryTransformer[String, Seq[S
     require(inputType == StringType, s"Input type must be string type but got $inputType.")
   }
 
+<<<<<<< HEAD
   override protected def outputDataType: DataType = new ArrayType(StringType, false)
+=======
+  override protected def outputDataType: DataType = new ArrayType(StringType, true)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   override def copy(extra: ParamMap): Tokenizer = defaultCopy(extra)
 }
@@ -50,7 +54,11 @@ class Tokenizer(override val uid: String) extends UnaryTransformer[String, Seq[S
 /**
  * :: Experimental ::
  * A regex based tokenizer that extracts tokens either by using the provided regex pattern to split
+<<<<<<< HEAD
  * the text (default) or repeatedly matching the regex (if `gaps` is true).
+=======
+ * the text (default) or repeatedly matching the regex (if `gaps` is false).
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
  * Optional parameters also allow filtering tokens using a minimal length.
  * It returns an array of strings that can be empty.
  */
@@ -113,7 +121,11 @@ class RegexTokenizer(override val uid: String)
     require(inputType == StringType, s"Input type must be string type but got $inputType.")
   }
 
+<<<<<<< HEAD
   override protected def outputDataType: DataType = new ArrayType(StringType, false)
+=======
+  override protected def outputDataType: DataType = new ArrayType(StringType, true)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   override def copy(extra: ParamMap): RegexTokenizer = defaultCopy(extra)
 }

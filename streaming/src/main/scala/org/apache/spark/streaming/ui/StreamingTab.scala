@@ -42,18 +42,28 @@ private[spark] class StreamingTab(val ssc: StreamingContext)
   attachPage(new StreamingPage(this))
   attachPage(new BatchPage(this))
 
+<<<<<<< HEAD
   var staticHandler: ServletContextHandler = null
 
   def attach() {
     getSparkUI(ssc).attachTab(this)
     staticHandler = JettyUtils.createStaticHandler(STATIC_RESOURCE_DIR, "/static/streaming")
     getSparkUI(ssc).attachHandler(staticHandler)
+=======
+  def attach() {
+    getSparkUI(ssc).attachTab(this)
+    getSparkUI(ssc).addStaticHandler(STATIC_RESOURCE_DIR, "/static/streaming")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   def detach() {
     getSparkUI(ssc).detachTab(this)
+<<<<<<< HEAD
     getSparkUI(ssc).detachHandler(staticHandler)
     staticHandler = null
+=======
+    getSparkUI(ssc).removeStaticHandler("/static/streaming")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }
 

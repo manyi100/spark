@@ -18,8 +18,13 @@ context("include an external JAR in SparkContext")
 
 runScript <- function() {
   sparkHome <- Sys.getenv("SPARK_HOME")
+<<<<<<< HEAD
   jarPath <- paste("--jars",
                    shQuote(file.path(sparkHome, "R/lib/SparkR/test_support/sparktestjar_2.10-1.0.jar")))
+=======
+  sparkTestJarPath <- "R/lib/SparkR/test_support/sparktestjar_2.10-1.0.jar"
+  jarPath <- paste("--jars", shQuote(file.path(sparkHome, sparkTestJarPath)))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   scriptPath <- file.path(sparkHome, "R/lib/SparkR/tests/jarTest.R")
   submitPath <- file.path(sparkHome, "bin/spark-submit")
   res <- system2(command = submitPath,
@@ -31,7 +36,13 @@ runScript <- function() {
 test_that("sparkJars tag in SparkContext", {
   testOutput <- runScript()
   helloTest <- testOutput[1]
+<<<<<<< HEAD
   expect_true(helloTest == "Hello, Dave")
   basicFunction <- testOutput[2]
   expect_true(basicFunction == 4L)
+=======
+  expect_equal(helloTest, "Hello, Dave")
+  basicFunction <- testOutput[2]
+  expect_equal(basicFunction, "4")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 })

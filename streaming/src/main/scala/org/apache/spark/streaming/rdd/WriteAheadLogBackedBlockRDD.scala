@@ -29,6 +29,7 @@ import org.apache.spark._
 import org.apache.spark.rdd.BlockRDD
 import org.apache.spark.storage.{BlockId, StorageLevel}
 import org.apache.spark.streaming.util._
+import org.apache.spark.util.SerializableConfiguration
 
 /**
  * Partition class for [[org.apache.spark.streaming.rdd.WriteAheadLogBackedBlockRDD]].
@@ -94,7 +95,9 @@ class WriteAheadLogBackedBlockRDD[T: ClassTag](
 
   // Hadoop configuration is not serializable, so broadcast it as a serializable.
   @transient private val hadoopConfig = sc.hadoopConfiguration
-  private val broadcastedHadoopConf = new SerializableWritable(hadoopConfig)
+  private val broadcastedHadoopConf = new SerializableConfiguration(hadoopConfig)
+
+  override def isValid(): Boolean = true
 
   override def isValid(): Boolean = true
 

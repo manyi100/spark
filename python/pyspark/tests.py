@@ -1002,6 +1002,19 @@ class RDDTests(ReusedPySparkTestCase):
             for size in sizes:
                 self.assertGreater(size, 0)
 
+    def test_pipe_functions(self):
+        data = ['1', '2', '3']
+        rdd = self.sc.parallelize(data)
+        with QuietTest(self.sc):
+            self.assertEqual([], rdd.pipe('cc').collect())
+            self.assertRaises(Py4JJavaError, rdd.pipe('cc', checkCode=True).collect)
+        result = rdd.pipe('cat').collect()
+        result.sort()
+        for x, y in zip(data, result):
+            self.assertEqual(x, y)
+        self.assertRaises(Py4JJavaError, rdd.pipe('grep 4', checkCode=True).collect)
+        self.assertEqual([], rdd.pipe('grep 4').collect())
+
 
 class ProfilerTests(PySparkTestCase):
 
@@ -1538,7 +1551,8 @@ class DaemonTests(unittest.TestCase):
 
         # start daemon
         daemon_path = os.path.join(os.path.dirname(__file__), "daemon.py")
-        daemon = Popen([sys.executable, daemon_path], stdin=PIPE, stdout=PIPE)
+        python_exec = sys.executable or os.environ.get("PYSPARK_PYTHON")
+        daemon = Popen([python_exec, daemon_path], stdin=PIPE, stdout=PIPE)
 
         # read the port number
         port = read_int(daemon.stdout)
@@ -1809,7 +1823,7 @@ class SparkSubmitTests(unittest.TestCase):
             |    return x + 1
             """)
         proc = subprocess.Popen([self.sparkSubmit, "--py-files", zip, "--master",
-                                "local-cluster[1,1,512]", script],
+                                "local-cluster[1,1,1024]", script],
                                 stdout=subprocess.PIPE)
         out, err = proc.communicate()
         self.assertEqual(0, proc.returncode)
@@ -1843,7 +1857,7 @@ class SparkSubmitTests(unittest.TestCase):
         self.create_spark_package("a:mylib:0.1")
         proc = subprocess.Popen([self.sparkSubmit, "--packages", "a:mylib:0.1", "--repositories",
                                  "file:" + self.programDir, "--master",
-                                 "local-cluster[1,1,512]", script], stdout=subprocess.PIPE)
+                                 "local-cluster[1,1,1024]", script], stdout=subprocess.PIPE)
         out, err = proc.communicate()
         self.assertEqual(0, proc.returncode)
         self.assertIn("[2, 3, 4]", out.decode('utf-8'))
@@ -1862,7 +1876,7 @@ class SparkSubmitTests(unittest.TestCase):
         # this will fail if you have different spark.executor.memory
         # in conf/spark-defaults.conf
         proc = subprocess.Popen(
-            [self.sparkSubmit, "--master", "local-cluster[1,1,512]", script],
+            [self.sparkSubmit, "--master", "local-cluster[1,1,1024]", script],
             stdout=subprocess.PIPE)
         out, err = proc.communicate()
         self.assertEqual(0, proc.returncode)

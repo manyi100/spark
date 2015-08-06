@@ -25,7 +25,12 @@ import org.apache.spark.mllib.tree.{EnsembleTestHelper, GradientBoostedTrees => 
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo}
 import org.apache.spark.mllib.util.MLlibTestSparkContext
 import org.apache.spark.rdd.RDD
+<<<<<<< HEAD
 import org.apache.spark.sql.{DataFrame, Row}
+=======
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.util.Utils
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 
 /**
@@ -88,6 +93,26 @@ class GBTRegressorSuite extends SparkFunSuite with MLlibTestSparkContext {
     assert(predictions.min() < -1)
   }
 
+<<<<<<< HEAD
+=======
+  test("Checkpointing") {
+    val tempDir = Utils.createTempDir()
+    val path = tempDir.toURI.toString
+    sc.setCheckpointDir(path)
+
+    val df = sqlContext.createDataFrame(data)
+    val gbt = new GBTRegressor()
+      .setMaxDepth(2)
+      .setMaxIter(5)
+      .setStepSize(0.1)
+      .setCheckpointInterval(2)
+    val model = gbt.fit(df)
+
+    sc.checkpointDir = None
+    Utils.deleteRecursively(tempDir)
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   // TODO: Reinstate test once runWithValidation is implemented  SPARK-7132
   /*
   test("runWithValidation stops early and performs better on a validation dataset") {

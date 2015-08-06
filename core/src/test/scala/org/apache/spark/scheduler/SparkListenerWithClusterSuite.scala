@@ -18,11 +18,19 @@
 package org.apache.spark.scheduler
 
 import scala.collection.mutable
+<<<<<<< HEAD
 
 import org.apache.spark.{LocalSparkContext, SparkContext, SparkFunSuite}
 import org.apache.spark.scheduler.cluster.ExecutorInfo
 
 import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
+=======
+
+import org.scalatest.{BeforeAndAfter, BeforeAndAfterAll}
+
+import org.apache.spark.{LocalSparkContext, SparkContext, SparkFunSuite}
+import org.apache.spark.scheduler.cluster.ExecutorInfo
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 /**
  * Unit tests for SparkListener that require a local cluster.
@@ -34,7 +42,7 @@ class SparkListenerWithClusterSuite extends SparkFunSuite with LocalSparkContext
   val WAIT_TIMEOUT_MILLIS = 10000
 
   before {
-    sc = new SparkContext("local-cluster[2,1,512]", "SparkListenerSuite")
+    sc = new SparkContext("local-cluster[2,1,1024]", "SparkListenerSuite")
   }
 
   test("SparkListener sends executor added message") {

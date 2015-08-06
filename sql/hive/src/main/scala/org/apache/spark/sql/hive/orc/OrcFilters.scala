@@ -18,7 +18,11 @@
 package org.apache.spark.sql.hive.orc
 
 import org.apache.hadoop.hive.common.`type`.{HiveChar, HiveDecimal, HiveVarchar}
+<<<<<<< HEAD
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument
+=======
+import org.apache.hadoop.hive.ql.io.sarg.{SearchArgumentFactory, SearchArgument}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.hadoop.hive.ql.io.sarg.SearchArgument.Builder
 import org.apache.hadoop.hive.serde2.io.DateWritable
 
@@ -33,18 +37,31 @@ import org.apache.spark.sql.sources._
 private[orc] object OrcFilters extends Logging {
   def createFilter(expr: Array[Filter]): Option[SearchArgument] = {
     expr.reduceOption(And).flatMap { conjunction =>
+<<<<<<< HEAD
       val builder = SearchArgument.FACTORY.newBuilder()
+=======
+      val builder = SearchArgumentFactory.newBuilder()
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       buildSearchArgument(conjunction, builder).map(_.build())
     }
   }
 
   private def buildSearchArgument(expression: Filter, builder: Builder): Option[Builder] = {
+<<<<<<< HEAD
     def newBuilder = SearchArgument.FACTORY.newBuilder()
 
     def isSearchableLiteral(value: Any) = value match {
       // These are types recognized by the `SearchArgumentImpl.BuilderImpl.boxLiteral()` method.
       case _: String | _: Long | _: Double | _: DateWritable | _: HiveDecimal | _: HiveChar |
            _: HiveVarchar | _: Byte | _: Short | _: Integer | _: Float => true
+=======
+    def newBuilder = SearchArgumentFactory.newBuilder()
+
+    def isSearchableLiteral(value: Any): Boolean = value match {
+      // These are types recognized by the `SearchArgumentImpl.BuilderImpl.boxLiteral()` method.
+      case _: String | _: Long | _: Double | _: Byte | _: Short | _: Integer | _: Float => true
+      case _: DateWritable | _: HiveDecimal | _: HiveChar | _: HiveVarchar => true
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       case _ => false
     }
 

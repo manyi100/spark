@@ -20,17 +20,29 @@ package org.apache.spark.sql
 import java.util.Properties
 
 import org.apache.hadoop.fs.Path
+<<<<<<< HEAD
 import org.apache.spark.Partition
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 import org.apache.spark.annotation.Experimental
 import org.apache.spark.api.java.JavaRDD
 import org.apache.spark.deploy.SparkHadoopUtil
 import org.apache.spark.rdd.RDD
+<<<<<<< HEAD
 import org.apache.spark.sql.jdbc.{JDBCPartition, JDBCPartitioningInfo, JDBCRelation}
 import org.apache.spark.sql.json.{JsonRDD, JSONRelation}
 import org.apache.spark.sql.parquet.ParquetRelation2
 import org.apache.spark.sql.sources.{LogicalRelation, ResolvedDataSource}
 import org.apache.spark.sql.types.StructType
+=======
+import org.apache.spark.sql.execution.datasources.{LogicalRelation, ResolvedDataSource}
+import org.apache.spark.sql.jdbc.{JDBCPartition, JDBCPartitioningInfo, JDBCRelation}
+import org.apache.spark.sql.json.JSONRelation
+import org.apache.spark.sql.parquet.ParquetRelation
+import org.apache.spark.sql.types.StructType
+import org.apache.spark.{Logging, Partition}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 /**
  * :: Experimental ::
@@ -40,7 +52,11 @@ import org.apache.spark.sql.types.StructType
  * @since 1.4.0
  */
 @Experimental
+<<<<<<< HEAD
 class DataFrameReader private[sql](sqlContext: SQLContext) {
+=======
+class DataFrameReader private[sql](sqlContext: SQLContext) extends Logging {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   /**
    * Specifies the input data source format.
@@ -236,6 +252,7 @@ class DataFrameReader private[sql](sqlContext: SQLContext) {
    */
   def json(jsonRDD: RDD[String]): DataFrame = {
     val samplingRatio = extraOptions.getOrElse("samplingRatio", "1.0").toDouble
+<<<<<<< HEAD
     if (sqlContext.conf.useJacksonStreamingAPI) {
       sqlContext.baseRelationToDataFrame(
         new JSONRelation(() => jsonRDD, None, samplingRatio, userSpecifiedSchema)(sqlContext))
@@ -247,6 +264,10 @@ class DataFrameReader private[sql](sqlContext: SQLContext) {
       val rowRDD = JsonRDD.jsonStringToRow(jsonRDD, appliedSchema, columnNameOfCorruptJsonRecord)
       sqlContext.createDataFrame(rowRDD, appliedSchema, needsConversion = false)
     }
+=======
+    sqlContext.baseRelationToDataFrame(
+      new JSONRelation(Some(jsonRDD), samplingRatio, userSpecifiedSchema, None, None)(sqlContext))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   /**
@@ -260,14 +281,39 @@ class DataFrameReader private[sql](sqlContext: SQLContext) {
     if (paths.isEmpty) {
       sqlContext.emptyDataFrame
     } else {
+<<<<<<< HEAD
       val globbedPaths = paths.map(new Path(_)).flatMap(SparkHadoopUtil.get.globPath).toArray
       sqlContext.baseRelationToDataFrame(
         new ParquetRelation2(
           globbedPaths.map(_.toString), None, None, extraOptions.toMap)(sqlContext))
+=======
+      val globbedPaths = paths.flatMap { path =>
+        val hdfsPath = new Path(path)
+        val fs = hdfsPath.getFileSystem(sqlContext.sparkContext.hadoopConfiguration)
+        val qualified = hdfsPath.makeQualified(fs.getUri, fs.getWorkingDirectory)
+        SparkHadoopUtil.get.globPathIfNecessary(qualified)
+      }.toArray
+
+      sqlContext.baseRelationToDataFrame(
+        new ParquetRelation(
+          globbedPaths.map(_.toString), userSpecifiedSchema, None, extraOptions.toMap)(sqlContext))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
   /**
+<<<<<<< HEAD
+=======
+   * Loads an ORC file and returns the result as a [[DataFrame]].
+   *
+   * @param path input path
+   * @since 1.5.0
+   * @note Currently, this method can only be used together with `HiveContext`.
+   */
+  def orc(path: String): DataFrame = format("orc").load(path)
+
+  /**
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    * Returns the specified table as a [[DataFrame]].
    *
    * @since 1.4.0

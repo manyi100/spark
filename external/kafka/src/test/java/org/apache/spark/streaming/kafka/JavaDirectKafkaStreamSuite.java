@@ -70,7 +70,11 @@ public class JavaDirectKafkaStreamSuite implements Serializable {
     final String topic1 = "topic1";
     final String topic2 = "topic2";
     // hold a reference to the current offset ranges, so it can be used downstream
+<<<<<<< HEAD
     final AtomicReference<OffsetRange[]> offsetRanges = new AtomicReference();
+=======
+    final AtomicReference<OffsetRange[]> offsetRanges = new AtomicReference<>();
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
     String[] topic1data = createTopicAndSendData(topic1);
     String[] topic2data = createTopicAndSendData(topic2);

@@ -15,6 +15,10 @@
  * limitations under the License.
  */
 
+<<<<<<< HEAD
+=======
+// scalastyle:off println
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 package org.apache.spark.examples.ml
 
 import scala.collection.mutable
@@ -145,9 +149,15 @@ object LogisticRegressionExample {
     val elapsedTime = (System.nanoTime() - startTime) / 1e9
     println(s"Training time: $elapsedTime seconds")
 
+<<<<<<< HEAD
     val lirModel = pipelineModel.stages.last.asInstanceOf[LogisticRegressionModel]
     // Print the weights and intercept for logistic regression.
     println(s"Weights: ${lirModel.weights} Intercept: ${lirModel.intercept}")
+=======
+    val lorModel = pipelineModel.stages.last.asInstanceOf[LogisticRegressionModel]
+    // Print the weights and intercept for logistic regression.
+    println(s"Weights: ${lorModel.weights} Intercept: ${lorModel.intercept}")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
     println("Training data results:")
     DecisionTreeExample.evaluateClassificationModel(pipelineModel, training, "indexedLabel")
@@ -157,3 +167,7 @@ object LogisticRegressionExample {
     sc.stop()
   }
 }
+<<<<<<< HEAD
+=======
+// scalastyle:on println
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

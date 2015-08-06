@@ -16,12 +16,17 @@
  */
 package org.apache.spark.status.api.v1
 
+<<<<<<< HEAD
 import java.text.SimpleDateFormat
+=======
+import java.text.{ParseException, SimpleDateFormat}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import java.util.TimeZone
 import javax.ws.rs.WebApplicationException
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.Response.Status
 
+<<<<<<< HEAD
 import scala.util.Try
 
 private[v1] class SimpleDateParam(val originalValue: String) {
@@ -51,5 +56,29 @@ private[v1] object SimpleDateParam {
       new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSz"),
       gmtDay
     )
+=======
+private[v1] class SimpleDateParam(val originalValue: String) {
+
+  val timestamp: Long = {
+    val format = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSz")
+    try {
+      format.parse(originalValue).getTime()
+    } catch {
+      case _: ParseException =>
+        val gmtDay = new SimpleDateFormat("yyyy-MM-dd")
+        gmtDay.setTimeZone(TimeZone.getTimeZone("GMT"))
+        try {
+          gmtDay.parse(originalValue).getTime()
+        } catch {
+          case _: ParseException =>
+            throw new WebApplicationException(
+              Response
+                .status(Status.BAD_REQUEST)
+                .entity("Couldn't parse date: " + originalValue)
+                .build()
+            )
+        }
+    }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }

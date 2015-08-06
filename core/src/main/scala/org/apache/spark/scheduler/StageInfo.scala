@@ -34,7 +34,12 @@ class StageInfo(
     val numTasks: Int,
     val rddInfos: Seq[RDDInfo],
     val parentIds: Seq[Int],
+<<<<<<< HEAD
     val details: String) {
+=======
+    val details: String,
+    private[spark] val taskLocalityPreferences: Seq[Seq[TaskLocation]] = Seq.empty) {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   /** When this stage was submitted from the DAGScheduler to a TaskScheduler. */
   var submissionTime: Option[Long] = None
   /** Time when all tasks in the stage completed or when the stage was cancelled. */
@@ -70,16 +75,26 @@ private[spark] object StageInfo {
    * shuffle dependencies. Therefore, all ancestor RDDs related to this Stage's RDD through a
    * sequence of narrow dependencies should also be associated with this Stage.
    */
-  def fromStage(stage: Stage, numTasks: Option[Int] = None): StageInfo = {
+  def fromStage(
+      stage: Stage,
+      attemptId: Int,
+      numTasks: Option[Int] = None,
+      taskLocalityPreferences: Seq[Seq[TaskLocation]] = Seq.empty
+    ): StageInfo = {
     val ancestorRddInfos = stage.rdd.getNarrowAncestors.map(RDDInfo.fromRdd)
     val rddInfos = Seq(RDDInfo.fromRdd(stage.rdd)) ++ ancestorRddInfos
     new StageInfo(
       stage.id,
-      stage.attemptId,
+      attemptId,
       stage.name,
       numTasks.getOrElse(stage.numTasks),
       rddInfos,
       stage.parents.map(_.id),
+<<<<<<< HEAD
       stage.details)
+=======
+      stage.details,
+      taskLocalityPreferences)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }

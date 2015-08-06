@@ -41,19 +41,29 @@ class OrcHadoopFsRelationSuite extends HadoopFsRelationTest {
           .parallelize(for (i <- 1 to 3) yield (i, s"val_$i", p1))
           .toDF("a", "b", "p1")
           .write
+<<<<<<< HEAD
           .format("orc")
           .save(partitionDir.toString)
+=======
+          .orc(partitionDir.toString)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       }
 
       val dataSchemaWithPartition =
         StructType(dataSchema.fields :+ StructField("p1", IntegerType, nullable = true))
 
       checkQueries(
+<<<<<<< HEAD
         load(
           source = dataSourceName,
           options = Map(
             "path" -> file.getCanonicalPath,
             "dataSchema" -> dataSchemaWithPartition.json)))
+=======
+        read.options(Map(
+          "path" -> file.getCanonicalPath,
+          "dataSchema" -> dataSchemaWithPartition.json)).format(dataSourceName).load())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 }

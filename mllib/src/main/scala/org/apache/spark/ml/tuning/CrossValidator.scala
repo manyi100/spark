@@ -32,6 +32,7 @@ import org.apache.spark.sql.types.StructType
 /**
  * Params for [[CrossValidator]] and [[CrossValidatorModel]].
  */
+<<<<<<< HEAD
 private[ml] trait CrossValidatorParams extends Params {
 
   /**
@@ -64,6 +65,9 @@ private[ml] trait CrossValidatorParams extends Params {
   /** @group getParam */
   def getEvaluator: Evaluator = $(evaluator)
 
+=======
+private[ml] trait CrossValidatorParams extends ValidatorParams {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   /**
    * Param for number of folds for cross validation.  Must be >= 2.
    * Default: 3
@@ -135,6 +139,7 @@ class CrossValidator(override val uid: String) extends Estimator[CrossValidatorM
     logInfo(s"Best set of parameters:\n${epm(bestIndex)}")
     logInfo(s"Best cross-validation metric: $bestMetric.")
     val bestModel = est.fit(dataset, epm(bestIndex)).asInstanceOf[Model[_]]
+<<<<<<< HEAD
     copyValues(new CrossValidatorModel(uid, bestModel).setParent(this))
   }
 
@@ -150,6 +155,23 @@ class CrossValidator(override val uid: String) extends Estimator[CrossValidatorM
     }
   }
 
+=======
+    copyValues(new CrossValidatorModel(uid, bestModel, metrics).setParent(this))
+  }
+
+  override def transformSchema(schema: StructType): StructType = {
+    $(estimator).transformSchema(schema)
+  }
+
+  override def validateParams(): Unit = {
+    super.validateParams()
+    val est = $(estimator)
+    for (paramMap <- $(estimatorParamMaps)) {
+      est.copy(paramMap).validateParams()
+    }
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   override def copy(extra: ParamMap): CrossValidator = {
     val copied = defaultCopy(extra).asInstanceOf[CrossValidator]
     if (copied.isDefined(estimator)) {
@@ -169,7 +191,12 @@ class CrossValidator(override val uid: String) extends Estimator[CrossValidatorM
 @Experimental
 class CrossValidatorModel private[ml] (
     override val uid: String,
+<<<<<<< HEAD
     val bestModel: Model[_])
+=======
+    val bestModel: Model[_],
+    val avgMetrics: Array[Double])
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   extends Model[CrossValidatorModel] with CrossValidatorParams {
 
   override def validateParams(): Unit = {
@@ -186,7 +213,14 @@ class CrossValidatorModel private[ml] (
   }
 
   override def copy(extra: ParamMap): CrossValidatorModel = {
+<<<<<<< HEAD
     val copied = new CrossValidatorModel(uid, bestModel.copy(extra).asInstanceOf[Model[_]])
+=======
+    val copied = new CrossValidatorModel(
+      uid,
+      bestModel.copy(extra).asInstanceOf[Model[_]],
+      avgMetrics.clone())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     copyValues(copied, extra)
   }
 }

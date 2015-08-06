@@ -21,7 +21,11 @@ import java.io.File
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.apache.spark.SparkFunSuite
 import org.apache.spark.sql._
+<<<<<<< HEAD
 import org.apache.spark.sql.catalyst.expressions.Row
+=======
+import org.apache.spark.sql.catalyst.InternalRow
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.hive.test.TestHive
 import org.apache.spark.sql.hive.test.TestHive._
 import org.apache.spark.sql.hive.test.TestHive.implicits._
@@ -31,7 +35,10 @@ import org.scalatest.BeforeAndAfterAll
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 // The data where the partitioning key exists only in the directory structure.
 case class OrcParData(intField: Int, stringField: String)
 
@@ -40,7 +47,11 @@ case class OrcParDataWithKey(intField: Int, pi: Int, stringField: String, ps: St
 
 // TODO This test suite duplicates ParquetPartitionDiscoverySuite a lot
 class OrcPartitionDiscoverySuite extends QueryTest with BeforeAndAfterAll {
+<<<<<<< HEAD
   val defaultPartitionName = ConfVars.DEFAULTPARTITIONNAME.defaultVal
+=======
+  val defaultPartitionName = ConfVars.DEFAULTPARTITIONNAME.defaultStrVal
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   def withTempDir(f: File => Unit): Unit = {
     val dir = Utils.createTempDir().getCanonicalFile
@@ -49,13 +60,21 @@ class OrcPartitionDiscoverySuite extends QueryTest with BeforeAndAfterAll {
 
   def makeOrcFile[T <: Product: ClassTag: TypeTag](
       data: Seq[T], path: File): Unit = {
+<<<<<<< HEAD
     data.toDF().write.format("orc").mode("overwrite").save(path.getCanonicalPath)
+=======
+    data.toDF().write.mode("overwrite").orc(path.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
 
   def makeOrcFile[T <: Product: ClassTag: TypeTag](
       df: DataFrame, path: File): Unit = {
+<<<<<<< HEAD
     df.write.format("orc").mode("overwrite").save(path.getCanonicalPath)
+=======
+    df.write.mode("overwrite").orc(path.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   protected def withTempTable(tableName: String)(f: => Unit): Unit = {
@@ -90,7 +109,11 @@ class OrcPartitionDiscoverySuite extends QueryTest with BeforeAndAfterAll {
           makePartitionDir(base, defaultPartitionName, "pi" -> pi, "ps" -> ps))
       }
 
+<<<<<<< HEAD
       read.format("orc").load(base.getCanonicalPath).registerTempTable("t")
+=======
+      read.orc(base.getCanonicalPath).registerTempTable("t")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
       withTempTable("t") {
         checkAnswer(
@@ -137,7 +160,11 @@ class OrcPartitionDiscoverySuite extends QueryTest with BeforeAndAfterAll {
           makePartitionDir(base, defaultPartitionName, "pi" -> pi, "ps" -> ps))
       }
 
+<<<<<<< HEAD
       read.format("orc").load(base.getCanonicalPath).registerTempTable("t")
+=======
+      read.orc(base.getCanonicalPath).registerTempTable("t")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
       withTempTable("t") {
         checkAnswer(
@@ -187,9 +214,14 @@ class OrcPartitionDiscoverySuite extends QueryTest with BeforeAndAfterAll {
       }
 
       read
+<<<<<<< HEAD
         .format("orc")
         .option(ConfVars.DEFAULTPARTITIONNAME.varname, defaultPartitionName)
         .load(base.getCanonicalPath)
+=======
+        .option(ConfVars.DEFAULTPARTITIONNAME.varname, defaultPartitionName)
+        .orc(base.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         .registerTempTable("t")
 
       withTempTable("t") {
@@ -230,9 +262,14 @@ class OrcPartitionDiscoverySuite extends QueryTest with BeforeAndAfterAll {
       }
 
       read
+<<<<<<< HEAD
         .format("orc")
         .option(ConfVars.DEFAULTPARTITIONNAME.varname, defaultPartitionName)
         .load(base.getCanonicalPath)
+=======
+        .option(ConfVars.DEFAULTPARTITIONNAME.varname, defaultPartitionName)
+        .orc(base.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         .registerTempTable("t")
 
       withTempTable("t") {

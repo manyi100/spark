@@ -251,6 +251,20 @@ class FeatureTests(PySparkTestCase):
                          "Model should inherit the UID from its parent estimator.")
         output = idf0m.transform(dataset)
         self.assertIsNotNone(output.head().idf)
+<<<<<<< HEAD
+=======
+
+    def test_ngram(self):
+        sqlContext = SQLContext(self.sc)
+        dataset = sqlContext.createDataFrame([
+            ([["a", "b", "c", "d", "e"]])], ["input"])
+        ngram0 = NGram(n=4, inputCol="input", outputCol="output")
+        self.assertEqual(ngram0.getN(), 4)
+        self.assertEqual(ngram0.getInputCol(), "input")
+        self.assertEqual(ngram0.getOutputCol(), "output")
+        transformedDF = ngram0.transform(dataset)
+        self.assertEquals(transformedDF.head().output, ["a b c d", "b c d e"])
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 
 if __name__ == "__main__":

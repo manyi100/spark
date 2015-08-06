@@ -207,7 +207,7 @@ span.additional-metric-title {
 /* Hide all additional metrics by default. This is done here rather than using JavaScript to
  * avoid slow page loads for stage pages with large numbers (e.g., thousands) of tasks. */
 .scheduler_delay, .deserialization_time, .fetch_wait_time, .shuffle_read_remote,
-.serialization_time, .getting_result_time {
+.serialization_time, .getting_result_time, .peak_execution_memory {
   display: none;
 }
 
@@ -224,3 +224,14 @@ span.additional-metric-title {
 a.expandbutton {
   cursor: pointer;
 }
+<<<<<<< HEAD
+=======
+
+.executor-thread {
+  background: #E6E6E6;
+}
+
+.non-executor-thread {
+  background: #FAFAFA;
+}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

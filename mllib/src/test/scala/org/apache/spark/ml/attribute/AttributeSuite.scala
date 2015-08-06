@@ -215,5 +215,13 @@ class AttributeSuite extends SparkFunSuite {
     assert(Attribute.fromStructField(fldWithoutMeta) == UnresolvedAttribute)
     val fldWithMeta = new StructField("x", DoubleType, false, metadata)
     assert(Attribute.fromStructField(fldWithMeta).isNumeric)
+<<<<<<< HEAD
+=======
+    // Attribute.fromStructField should accept any NumericType, not just DoubleType
+    val longFldWithMeta = new StructField("x", LongType, false, metadata)
+    assert(Attribute.fromStructField(longFldWithMeta).isNumeric)
+    val decimalFldWithMeta = new StructField("x", DecimalType(38, 18), false, metadata)
+    assert(Attribute.fromStructField(decimalFldWithMeta).isNumeric)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }

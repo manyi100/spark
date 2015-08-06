@@ -30,8 +30,13 @@ private[spark] abstract class SparkFunSuite extends FunSuite with Logging {
    * Log the suite name and the test name before and after each test.
    *
    * Subclasses should never override this method. If they wish to run
+<<<<<<< HEAD
    * custom code before and after each test, they should should mix in
    * the {{org.scalatest.BeforeAndAfter}} trait instead.
+=======
+   * custom code before and after each test, they should mix in the
+   * {{org.scalatest.BeforeAndAfter}} trait instead.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    */
   final protected override def withFixture(test: NoArgTest): Outcome = {
     val testName = test.text

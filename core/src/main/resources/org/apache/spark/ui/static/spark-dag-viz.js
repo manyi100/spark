@@ -73,12 +73,29 @@ var StagePageVizConstants = {
 };
 
 /*
+<<<<<<< HEAD
+=======
+ * Return "expand-dag-viz-arrow-job" if forJob is true.
+ * Otherwise, return "expand-dag-viz-arrow-stage".
+ */
+function expandDagVizArrowKey(forJob) {
+  return forJob ? "expand-dag-viz-arrow-job" : "expand-dag-viz-arrow-stage";
+}
+
+/*
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
  * Show or hide the RDD DAG visualization.
  *
  * The graph is only rendered the first time this is called.
  * This is the narrow interface called from the Scala UI code.
  */
 function toggleDagViz(forJob) {
+<<<<<<< HEAD
+=======
+  var status = window.localStorage.getItem(expandDagVizArrowKey(forJob)) == "true";
+  status = !status;
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   var arrowSelector = ".expand-dag-viz-arrow";
   $(arrowSelector).toggleClass('arrow-closed');
   $(arrowSelector).toggleClass('arrow-open');
@@ -93,8 +110,29 @@ function toggleDagViz(forJob) {
     // Save the graph for later so we don't have to render it again
     graphContainer().style("display", "none");
   }
+<<<<<<< HEAD
 }
 
+=======
+
+  window.localStorage.setItem(expandDagVizArrowKey(forJob), "" + status);
+}
+
+$(function (){
+  if (window.localStorage.getItem(expandDagVizArrowKey(false)) == "true") {
+    // Set it to false so that the click function can revert it
+    window.localStorage.setItem(expandDagVizArrowKey(false), "false");
+    toggleDagViz(false);
+  }
+
+  if (window.localStorage.getItem(expandDagVizArrowKey(true)) == "true") {
+    // Set it to false so that the click function can revert it
+    window.localStorage.setItem(expandDagVizArrowKey(true), "false");
+    toggleDagViz(true);
+  }
+});
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 /*
  * Render the RDD DAG visualization.
  *

@@ -21,7 +21,13 @@ import scala.reflect.ClassTag
 
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDDOperationScope
+<<<<<<< HEAD
 import org.apache.spark.streaming.{Time, Duration, StreamingContext}
+=======
+import org.apache.spark.streaming.{Duration, StreamingContext, Time}
+import org.apache.spark.streaming.scheduler.RateController
+import org.apache.spark.streaming.scheduler.rate.RateEstimator
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.util.Utils
 
 /**
@@ -47,6 +53,12 @@ abstract class InputDStream[T: ClassTag] (@transient ssc_ : StreamingContext)
   /** This is an unique identifier for the input stream. */
   val id = ssc.getNewInputStreamId()
 
+<<<<<<< HEAD
+=======
+  // Keep track of the freshest rate for this stream using the rateEstimator
+  protected[streaming] val rateController: Option[RateController] = None
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   /** A human-readable name of this InputDStream */
   private[streaming] def name: String = {
     // e.g. FlumePollingDStream -> "Flume polling stream"

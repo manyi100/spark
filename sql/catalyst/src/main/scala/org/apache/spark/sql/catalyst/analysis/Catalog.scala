@@ -17,10 +17,18 @@
 
 package org.apache.spark.sql.catalyst.analysis
 
-import scala.collection.mutable
+import java.util.concurrent.ConcurrentHashMap
 
+import scala.collection.JavaConversions._
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
+<<<<<<< HEAD
 import org.apache.spark.sql.catalyst.CatalystConf
 import org.apache.spark.sql.catalyst.EmptyConf
+=======
+import org.apache.spark.sql.catalyst.{TableIdentifier, CatalystConf, EmptyConf}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.catalyst.plans.logical.{LogicalPlan, Subquery}
 
 /**
@@ -50,7 +58,7 @@ trait Catalog {
    */
   def getTables(databaseName: Option[String]): Seq[(String, Boolean)]
 
-  def refreshTable(databaseName: String, tableName: String): Unit
+  def refreshTable(tableIdent: TableIdentifier): Unit
 
   def registerTable(tableIdentifier: Seq[String], plan: LogicalPlan): Unit
 
@@ -81,18 +89,22 @@ trait Catalog {
 }
 
 class SimpleCatalog(val conf: CatalystConf) extends Catalog {
+<<<<<<< HEAD
   val tables = new mutable.HashMap[String, LogicalPlan]()
+=======
+  val tables = new ConcurrentHashMap[String, LogicalPlan]
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   override def registerTable(
       tableIdentifier: Seq[String],
       plan: LogicalPlan): Unit = {
     val tableIdent = processTableIdentifier(tableIdentifier)
-    tables += ((getDbTableName(tableIdent), plan))
+    tables.put(getDbTableName(tableIdent), plan)
   }
 
   override def unregisterTable(tableIdentifier: Seq[String]): Unit = {
     val tableIdent = processTableIdentifier(tableIdentifier)
-    tables -= getDbTableName(tableIdent)
+    tables.remove(getDbTableName(tableIdent))
   }
 
   override def unregisterAllTables(): Unit = {
@@ -101,10 +113,7 @@ class SimpleCatalog(val conf: CatalystConf) extends Catalog {
 
   override def tableExists(tableIdentifier: Seq[String]): Boolean = {
     val tableIdent = processTableIdentifier(tableIdentifier)
-    tables.get(getDbTableName(tableIdent)) match {
-      case Some(_) => true
-      case None => false
-    }
+    tables.containsKey(getDbTableName(tableIdent))
   }
 
   override def lookupRelation(
@@ -112,7 +121,10 @@ class SimpleCatalog(val conf: CatalystConf) extends Catalog {
       alias: Option[String] = None): LogicalPlan = {
     val tableIdent = processTableIdentifier(tableIdentifier)
     val tableFullName = getDbTableName(tableIdent)
-    val table = tables.getOrElse(tableFullName, sys.error(s"Table Not Found: $tableFullName"))
+    val table = tables.get(tableFullName)
+    if (table == null) {
+      sys.error(s"Table Not Found: $tableFullName")
+    }
     val tableWithQualifiers = Subquery(tableIdent.last, table)
 
     // If an alias was specified by the lookup, wrap the plan in a subquery so that attributes are
@@ -121,12 +133,14 @@ class SimpleCatalog(val conf: CatalystConf) extends Catalog {
   }
 
   override def getTables(databaseName: Option[String]): Seq[(String, Boolean)] = {
-    tables.map {
-      case (name, _) => (name, true)
-    }.toSeq
+    val result = ArrayBuffer.empty[(String, Boolean)]
+    for (name <- tables.keySet()) {
+      result += ((name, true))
+    }
+    result
   }
 
-  override def refreshTable(databaseName: String, tableName: String): Unit = {
+  override def refreshTable(tableIdent: TableIdentifier): Unit = {
     throw new UnsupportedOperationException
   }
 }
@@ -235,7 +249,7 @@ object EmptyCatalog extends Catalog {
 
   override def unregisterAllTables(): Unit = {}
 
-  override def refreshTable(databaseName: String, tableName: String): Unit = {
+  override def refreshTable(tableIdent: TableIdentifier): Unit = {
     throw new UnsupportedOperationException
   }
 }

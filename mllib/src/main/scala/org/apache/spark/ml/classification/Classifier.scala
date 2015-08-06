@@ -18,14 +18,17 @@
 package org.apache.spark.ml.classification
 
 import org.apache.spark.annotation.DeveloperApi
+<<<<<<< HEAD
 import org.apache.spark.ml.param.ParamMap
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.ml.{PredictionModel, PredictorParams, Predictor}
 import org.apache.spark.ml.param.shared.HasRawPredictionCol
 import org.apache.spark.ml.util.SchemaUtils
 import org.apache.spark.mllib.linalg.{Vector, VectorUDT}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DataType, DoubleType, StructType}
+import org.apache.spark.sql.types.{DataType, StructType}
 
 
 /**
@@ -102,15 +105,31 @@ abstract class ClassificationModel[FeaturesType, M <: ClassificationModel[Featur
     var outputData = dataset
     var numColsOutput = 0
     if (getRawPredictionCol != "") {
+<<<<<<< HEAD
       outputData = outputData.withColumn(getRawPredictionCol,
         callUDF(predictRaw _, new VectorUDT, col(getFeaturesCol)))
+=======
+      val predictRawUDF = udf { (features: Any) =>
+        predictRaw(features.asInstanceOf[FeaturesType])
+      }
+      outputData = outputData.withColumn(getRawPredictionCol, predictRawUDF(col(getFeaturesCol)))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       numColsOutput += 1
     }
     if (getPredictionCol != "") {
       val predUDF = if (getRawPredictionCol != "") {
+<<<<<<< HEAD
         callUDF(raw2prediction _, DoubleType, col(getRawPredictionCol))
       } else {
         callUDF(predict _, DoubleType, col(getFeaturesCol))
+=======
+        udf(raw2prediction _).apply(col(getRawPredictionCol))
+      } else {
+        val predictUDF = udf { (features: Any) =>
+          predict(features.asInstanceOf[FeaturesType])
+        }
+        predictUDF(col(getFeaturesCol))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       }
       outputData = outputData.withColumn(getPredictionCol, predUDF)
       numColsOutput += 1
@@ -151,5 +170,9 @@ abstract class ClassificationModel[FeaturesType, M <: ClassificationModel[Featur
    * This may be overridden to support thresholds which favor particular labels.
    * @return  predicted label
    */
+<<<<<<< HEAD
   protected def raw2prediction(rawPrediction: Vector): Double = rawPrediction.toDense.argmax
+=======
+  protected def raw2prediction(rawPrediction: Vector): Double = rawPrediction.argmax
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }

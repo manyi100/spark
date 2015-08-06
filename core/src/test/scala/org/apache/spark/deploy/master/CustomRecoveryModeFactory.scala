@@ -19,6 +19,7 @@
 // when they are outside of org.apache.spark.
 package other.supplier
 
+<<<<<<< HEAD
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
@@ -31,6 +32,21 @@ class CustomRecoveryModeFactory(
   conf: SparkConf,
   serialization: Serialization
 ) extends StandaloneRecoveryModeFactory(conf, serialization) {
+=======
+import java.nio.ByteBuffer
+
+import scala.collection.mutable
+import scala.reflect.ClassTag
+
+import org.apache.spark.SparkConf
+import org.apache.spark.deploy.master._
+import org.apache.spark.serializer.Serializer
+
+class CustomRecoveryModeFactory(
+  conf: SparkConf,
+  serializer: Serializer
+) extends StandaloneRecoveryModeFactory(conf, serializer) {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   CustomRecoveryModeFactory.instantiationAttempts += 1
 
@@ -40,7 +56,11 @@ class CustomRecoveryModeFactory(
    *
    */
   override def createPersistenceEngine(): PersistenceEngine =
+<<<<<<< HEAD
     new CustomPersistenceEngine(serialization)
+=======
+    new CustomPersistenceEngine(serializer)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   /**
    * Create an instance of LeaderAgent that decides who gets elected as master.
@@ -53,7 +73,11 @@ object CustomRecoveryModeFactory {
   @volatile var instantiationAttempts = 0
 }
 
+<<<<<<< HEAD
 class CustomPersistenceEngine(serialization: Serialization) extends PersistenceEngine {
+=======
+class CustomPersistenceEngine(serializer: Serializer) extends PersistenceEngine {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   val data = mutable.HashMap[String, Array[Byte]]()
 
   CustomPersistenceEngine.lastInstance = Some(this)
@@ -64,10 +88,17 @@ class CustomPersistenceEngine(serialization: Serialization) extends PersistenceE
    */
   override def persist(name: String, obj: Object): Unit = {
     CustomPersistenceEngine.persistAttempts += 1
+<<<<<<< HEAD
     serialization.serialize(obj) match {
       case util.Success(bytes) => data += name -> bytes
       case util.Failure(cause) => throw new RuntimeException(cause)
     }
+=======
+    val serialized = serializer.newInstance().serialize(obj)
+    val bytes = new Array[Byte](serialized.remaining())
+    serialized.get(bytes)
+    data += name -> bytes
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   /**
@@ -84,6 +115,7 @@ class CustomPersistenceEngine(serialization: Serialization) extends PersistenceE
    */
   override def read[T: ClassTag](prefix: String): Seq[T] = {
     CustomPersistenceEngine.readAttempts += 1
+<<<<<<< HEAD
     val clazz = implicitly[ClassTag[T]].runtimeClass.asInstanceOf[Class[T]]
     val results = for ((name, bytes) <- data; if name.startsWith(prefix))
       yield serialization.deserialize(bytes, clazz)
@@ -93,6 +125,11 @@ class CustomPersistenceEngine(serialization: Serialization) extends PersistenceE
     }
 
     results.flatMap(_.toOption).toSeq
+=======
+    val results = for ((name, bytes) <- data; if name.startsWith(prefix))
+      yield serializer.newInstance().deserialize[T](ByteBuffer.wrap(bytes))
+    results.toSeq
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }
 
@@ -104,7 +141,12 @@ object CustomPersistenceEngine {
   @volatile var lastInstance: Option[CustomPersistenceEngine] = None
 }
 
+<<<<<<< HEAD
 class CustomLeaderElectionAgent(val masterActor: LeaderElectable) extends LeaderElectionAgent {
   masterActor.electedLeader()
+=======
+class CustomLeaderElectionAgent(val masterInstance: LeaderElectable) extends LeaderElectionAgent {
+  masterInstance.electedLeader()
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }
 

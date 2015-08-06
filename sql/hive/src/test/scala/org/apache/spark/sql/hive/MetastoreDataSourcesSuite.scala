@@ -17,22 +17,35 @@
 
 package org.apache.spark.sql.hive
 
-import java.io.File
+import java.io.{IOException, File}
 
 import scala.collection.mutable.ArrayBuffer
 
+<<<<<<< HEAD
 import org.scalatest.BeforeAndAfterAll
 
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.mapred.InvalidInputException
+import org.scalatest.BeforeAndAfterAll
 
+import org.apache.spark.Logging
 import org.apache.spark.sql._
+<<<<<<< HEAD
+=======
+import org.apache.spark.sql.execution.datasources.LogicalRelation
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.hive.client.{HiveTable, ManagedTable}
 import org.apache.spark.sql.hive.test.TestHive
 import org.apache.spark.sql.hive.test.TestHive._
 import org.apache.spark.sql.hive.test.TestHive.implicits._
+<<<<<<< HEAD
 import org.apache.spark.sql.parquet.ParquetRelation2
 import org.apache.spark.sql.sources.LogicalRelation
+=======
+import org.apache.spark.sql.parquet.ParquetRelation
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.test.SQLTestUtils
 import org.apache.spark.sql.types._
 import org.apache.spark.util.Utils
@@ -40,6 +53,7 @@ import org.apache.spark.util.Utils
 /**
  * Tests for persisting tables created though the data sources API into the metastore.
  */
+<<<<<<< HEAD
 class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeAndAfterAll {
   override val sqlContext = TestHive
 
@@ -73,6 +87,53 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
            |b String,
            |`c_!@(3)` int,
            |`<d>` Struct<`d!`:array<int>, `=`:array<struct<Dd2: boolean>>>)
+=======
+class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeAndAfterAll
+  with Logging {
+  override val sqlContext = TestHive
+
+  var jsonFilePath: String = _
+
+  override def beforeAll(): Unit = {
+    jsonFilePath = Utils.getSparkClassLoader.getResource("sample.json").getFile
+  }
+
+  test("persistent JSON table") {
+    withTable("jsonTable") {
+      sql(
+        s"""CREATE TABLE jsonTable
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+           |USING org.apache.spark.sql.json.DefaultSource
+           |OPTIONS (
+           |  path '$jsonFilePath'
+           |)
+         """.stripMargin)
+
+<<<<<<< HEAD
+      withTempTable("expectedJsonTable") {
+        read.json(jsonFilePath).registerTempTable("expectedJsonTable")
+        checkAnswer(
+          sql("SELECT a, b, `c_!@(3)`, `<d>`.`d!`, `<d>`.`=` FROM jsonTable"),
+          sql("SELECT a, b, `c_!@(3)`, `<d>`.`d!`, `<d>`.`=` FROM expectedJsonTable"))
+      }
+    }
+  }
+
+=======
+      checkAnswer(
+        sql("SELECT * FROM jsonTable"),
+        read.json(jsonFilePath).collect().toSeq)
+    }
+  }
+
+  test("persistent JSON table with a user specified schema") {
+    withTable("jsonTable") {
+      sql(
+        s"""CREATE TABLE jsonTable (
+           |a string,
+           |b String,
+           |`c_!@(3)` int,
+           |`<d>` Struct<`d!`:array<int>, `=`:array<struct<Dd2: boolean>>>)
            |USING org.apache.spark.sql.json.DefaultSource
            |OPTIONS (
            |  path '$jsonFilePath'
@@ -88,6 +149,7 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
     }
   }
 
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   test("persistent JSON table with a user specified schema with a subset of fields") {
     withTable("jsonTable") {
       // This works because JSON objects are self-describing and JSONRelation can get needed
@@ -145,6 +207,7 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
            |  path '$jsonFilePath'
            |)
          """.stripMargin)
+<<<<<<< HEAD
 
       checkAnswer(
         sql("SELECT * FROM jsonTable"),
@@ -156,6 +219,19 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
         sql("SELECT * FROM jsonTable").collect()
       }
 
+=======
+
+      checkAnswer(
+        sql("SELECT * FROM jsonTable"),
+        read.json(jsonFilePath))
+
+      sql("DROP TABLE jsonTable")
+
+      intercept[Exception] {
+        sql("SELECT * FROM jsonTable").collect()
+      }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       assert(
         new File(jsonFilePath).exists(),
         "The table with specified path is considered as an external table, " +
@@ -383,6 +459,7 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
            |AS
            |SELECT * FROM jsonTable
          """.stripMargin)
+<<<<<<< HEAD
 
       assert(fs.exists(filesystemPath), s"$expectedPath should exist after we create the table.")
 
@@ -499,6 +576,121 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
         checkAnswer(read.json(tempPath.toString), df)
       }
     }
+=======
+
+      assert(fs.exists(filesystemPath), s"$expectedPath should exist after we create the table.")
+
+      sql(
+        s"""CREATE TABLE loadedTable
+           |USING org.apache.spark.sql.json.DefaultSource
+           |OPTIONS (
+           |  path '$expectedPath'
+           |)
+         """.stripMargin)
+
+      assert(table("ctasJsonTable").schema === table("loadedTable").schema)
+
+      checkAnswer(
+        sql("SELECT * FROM ctasJsonTable"),
+        sql("SELECT * FROM loadedTable"))
+
+      sql("DROP TABLE ctasJsonTable")
+      assert(!fs.exists(filesystemPath), s"$expectedPath should not exist after we drop the table.")
+    }
+  }
+
+  test("SPARK-5286 Fail to drop an invalid table when using the data source API") {
+    withTable("jsonTable") {
+      sql(
+        s"""CREATE TABLE jsonTable
+           |USING org.apache.spark.sql.json.DefaultSource
+           |OPTIONS (
+           |  path 'it is not a path at all!'
+           |)
+         """.stripMargin)
+
+      sql("DROP TABLE jsonTable").collect().foreach(i => logInfo(i.toString))
+    }
+  }
+
+  test("SPARK-5839 HiveMetastoreCatalog does not recognize table aliases of data source tables.") {
+    withTable("savedJsonTable") {
+      // Save the df as a managed table (by not specifying the path).
+      (1 to 10)
+        .map(i => i -> s"str$i")
+        .toDF("a", "b")
+        .write
+        .format("json")
+        .saveAsTable("savedJsonTable")
+
+      checkAnswer(
+        sql("SELECT * FROM savedJsonTable where savedJsonTable.a < 5"),
+        (1 to 4).map(i => Row(i, s"str$i")))
+
+      checkAnswer(
+        sql("SELECT * FROM savedJsonTable tmp where tmp.a > 5"),
+        (6 to 10).map(i => Row(i, s"str$i")))
+
+      invalidateTable("savedJsonTable")
+
+      checkAnswer(
+        sql("SELECT * FROM savedJsonTable where savedJsonTable.a < 5"),
+        (1 to 4).map(i => Row(i, s"str$i")))
+
+      checkAnswer(
+        sql("SELECT * FROM savedJsonTable tmp where tmp.a > 5"),
+        (6 to 10).map(i => Row(i, s"str$i")))
+    }
+  }
+
+  test("save table") {
+    withTempPath { path =>
+      val tempPath = path.getCanonicalPath
+
+      withTable("savedJsonTable") {
+        val df = (1 to 10).map(i => i -> s"str$i").toDF("a", "b")
+
+        withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME.key -> "json") {
+          // Save the df as a managed table (by not specifying the path).
+          df.write.saveAsTable("savedJsonTable")
+
+          checkAnswer(sql("SELECT * FROM savedJsonTable"), df)
+
+          // We can overwrite it.
+          df.write.mode(SaveMode.Overwrite).saveAsTable("savedJsonTable")
+          checkAnswer(sql("SELECT * FROM savedJsonTable"), df)
+
+          // When the save mode is Ignore, we will do nothing when the table already exists.
+          df.select("b").write.mode(SaveMode.Ignore).saveAsTable("savedJsonTable")
+          // TODO in ResolvedDataSource, will convert the schema into nullable = true
+          // hence the df.schema is not exactly the same as table("savedJsonTable").schema
+          // assert(df.schema === table("savedJsonTable").schema)
+          checkAnswer(sql("SELECT * FROM savedJsonTable"), df)
+
+          // Drop table will also delete the data.
+          sql("DROP TABLE savedJsonTable")
+          intercept[IOException] {
+            read.json(catalog.hiveDefaultTableFilePath("savedJsonTable"))
+          }
+        }
+
+        // Create an external table by specifying the path.
+        withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME.key -> "not a source name") {
+          df.write
+            .format("org.apache.spark.sql.json")
+            .mode(SaveMode.Append)
+            .option("path", tempPath.toString)
+            .saveAsTable("savedJsonTable")
+
+          checkAnswer(sql("SELECT * FROM savedJsonTable"), df)
+        }
+
+        // Data should not be deleted after we drop the table.
+        sql("DROP TABLE savedJsonTable")
+        checkAnswer(read.json(tempPath.toString), df)
+      }
+    }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   test("create external table") {
@@ -508,7 +700,11 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
           s"""{ "a": $i, "b": "str$i" }"""
         }))
 
+<<<<<<< HEAD
         withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME -> "not a source name") {
+=======
+        withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME.key -> "not a source name") {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           df.write
             .format("json")
             .mode(SaveMode.Append)
@@ -516,7 +712,11 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
             .saveAsTable("savedJsonTable")
         }
 
+<<<<<<< HEAD
         withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME -> "json") {
+=======
+        withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME.key -> "json") {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           createExternalTable("createdJsonTable", tempPath.toString)
           assert(table("createdJsonTable").schema === df.schema)
           checkAnswer(sql("SELECT * FROM createdJsonTable"), df)
@@ -533,7 +733,11 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
         checkAnswer(read.json(tempPath.toString), df)
 
         // Try to specify the schema.
+<<<<<<< HEAD
         withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME -> "not a source name") {
+=======
+        withSQLConf(SQLConf.DEFAULT_DATA_SOURCE_NAME.key -> "not a source name") {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           val schema = StructType(StructField("b", StringType, true) :: Nil)
           createExternalTable(
             "createdJsonTable",
@@ -554,12 +758,17 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
                 "org.apache.spark.sql.json",
                 schema,
                 Map.empty[String, String])
+<<<<<<< HEAD
             }.getMessage.contains("'path' must be specified for json data."),
+=======
+            }.getMessage.contains("key not found: path"),
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
             "We should complain that path is not specified.")
         }
       }
     }
   }
+<<<<<<< HEAD
 
   if (HiveShim.version == "0.13.1") {
     test("scan a parquet table created through a CTAS statement") {
@@ -585,6 +794,37 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
               case _ =>
                 fail(s"test_parquet_ctas should have be converted to ${classOf[ParquetRelation2]}")
             }
+          }
+        }
+      }
+    }
+  }
+
+  test("Pre insert nullability check (ArrayType)") {
+    withTable("arrayInParquet") {
+      {
+        val df = (Tuple1(Seq(Int.box(1), null: Integer)) :: Nil).toDF("a")
+=======
+
+  test("scan a parquet table created through a CTAS statement") {
+    withSQLConf(HiveContext.CONVERT_METASTORE_PARQUET.key -> "true") {
+      withTempTable("jt") {
+        (1 to 10).map(i => i -> s"str$i").toDF("a", "b").registerTempTable("jt")
+
+        withTable("test_parquet_ctas") {
+          sql(
+            """CREATE TABLE test_parquet_ctas STORED AS PARQUET
+              |AS SELECT tmp.a FROM jt tmp WHERE tmp.a < 5
+            """.stripMargin)
+
+          checkAnswer(
+            sql(s"SELECT a FROM test_parquet_ctas WHERE a > 2 "),
+            Row(3) :: Row(4) :: Nil)
+
+          table("test_parquet_ctas").queryExecution.optimizedPlan match {
+            case LogicalRelation(p: ParquetRelation) => // OK
+            case _ =>
+              fail(s"test_parquet_ctas should have be converted to ${classOf[ParquetRelation]}")
           }
         }
       }
@@ -652,6 +892,81 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
     withTable("mapInParquet") {
       {
         val df = (Tuple1(Map(1 -> (null: Integer))) :: Nil).toDF("a")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+        val expectedSchema =
+          StructType(
+            StructField(
+              "a",
+<<<<<<< HEAD
+              ArrayType(IntegerType, containsNull = true),
+=======
+              MapType(IntegerType, IntegerType, valueContainsNull = true),
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+              nullable = true) :: Nil)
+
+        assert(df.schema === expectedSchema)
+
+        df.write
+          .format("parquet")
+          .mode(SaveMode.Overwrite)
+<<<<<<< HEAD
+          .saveAsTable("arrayInParquet")
+      }
+
+      {
+        val df = (Tuple1(Seq(2, 3)) :: Nil).toDF("a")
+=======
+          .saveAsTable("mapInParquet")
+      }
+
+      {
+        val df = (Tuple1(Map(2 -> 3)) :: Nil).toDF("a")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+        val expectedSchema =
+          StructType(
+            StructField(
+              "a",
+<<<<<<< HEAD
+              ArrayType(IntegerType, containsNull = false),
+=======
+              MapType(IntegerType, IntegerType, valueContainsNull = false),
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+              nullable = true) :: Nil)
+
+        assert(df.schema === expectedSchema)
+
+        df.write
+          .format("parquet")
+          .mode(SaveMode.Append)
+<<<<<<< HEAD
+          .insertInto("arrayInParquet")
+      }
+
+      (Tuple1(Seq(4, 5)) :: Nil).toDF("a")
+        .write
+        .mode(SaveMode.Append)
+        .saveAsTable("arrayInParquet") // This one internally calls df2.insertInto.
+
+      (Tuple1(Seq(Int.box(6), null: Integer)) :: Nil).toDF("a")
+        .write
+        .mode(SaveMode.Append)
+        .saveAsTable("arrayInParquet")
+
+      refreshTable("arrayInParquet")
+
+      checkAnswer(
+        sql("SELECT a FROM arrayInParquet"),
+        Row(ArrayBuffer(1, null)) ::
+          Row(ArrayBuffer(2, 3)) ::
+          Row(ArrayBuffer(4, 5)) ::
+          Row(ArrayBuffer(6, null)) :: Nil)
+    }
+  }
+
+  test("Pre insert nullability check (MapType)") {
+    withTable("mapInParquet") {
+      {
+        val df = (Tuple1(Map(1 -> (null: Integer))) :: Nil).toDF("a")
         val expectedSchema =
           StructType(
             StructField(
@@ -690,6 +1005,17 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
         .mode(SaveMode.Append)
         .saveAsTable("mapInParquet") // This one internally calls df2.insertInto.
 
+=======
+          .insertInto("mapInParquet")
+      }
+
+      (Tuple1(Map(4 -> 5)) :: Nil).toDF("a")
+        .write
+        .format("parquet")
+        .mode(SaveMode.Append)
+        .saveAsTable("mapInParquet") // This one internally calls df2.insertInto.
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       (Tuple1(Map(6 -> null.asInstanceOf[Integer])) :: Nil).toDF("a")
         .write
         .format("parquet")
@@ -708,7 +1034,11 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
   }
 
   test("SPARK-6024 wide schema support") {
+<<<<<<< HEAD
     withSQLConf(SQLConf.SCHEMA_STRING_LENGTH_THRESHOLD -> "4000") {
+=======
+    withSQLConf(SQLConf.SCHEMA_STRING_LENGTH_THRESHOLD.key -> "4000") {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       withTable("wide_schema") {
         // We will need 80 splits for this schema if the threshold is 4000.
         val schema = StructType((1 to 5000).map(i => StructField(s"c_$i", StringType, true)))
@@ -809,12 +1139,21 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
       intercept[AnalysisException] {
         createDF(30, 39).write.saveAsTable("insertParquet")
       }
+<<<<<<< HEAD
 
       createDF(30, 39).write.mode(SaveMode.Append).saveAsTable("insertParquet")
       checkAnswer(
         sql("SELECT p.c1, c2 FROM insertParquet p WHERE p.c1 > 5 AND p.c1 < 35"),
         (6 to 34).map(i => Row(i, s"str$i")))
 
+=======
+
+      createDF(30, 39).write.mode(SaveMode.Append).saveAsTable("insertParquet")
+      checkAnswer(
+        sql("SELECT p.c1, c2 FROM insertParquet p WHERE p.c1 > 5 AND p.c1 < 35"),
+        (6 to 34).map(i => Row(i, s"str$i")))
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       createDF(40, 49).write.mode(SaveMode.Append).insertInto("insertParquet")
       checkAnswer(
         sql("SELECT p.c1, c2 FROM insertParquet p WHERE p.c1 > 5 AND p.c1 < 45"),
@@ -834,5 +1173,25 @@ class MetastoreDataSourcesSuite extends QueryTest with SQLTestUtils with BeforeA
         sql("SELECT p.c1, c2 FROM insertParquet p"),
         (70 to 79).map(i => Row(i, s"str$i")))
     }
+<<<<<<< HEAD
+=======
+  }
+
+  test("SPARK-8156:create table to specific database by 'use dbname' ") {
+
+    val df = (1 to 3).map(i => (i, s"val_$i", i * 2)).toDF("a", "b", "c")
+    sqlContext.sql("""create database if not exists testdb8156""")
+    sqlContext.sql("""use testdb8156""")
+    df.write
+      .format("parquet")
+      .mode(SaveMode.Overwrite)
+      .saveAsTable("ttt3")
+
+    checkAnswer(
+      sqlContext.sql("show TABLES in testdb8156").filter("tableName = 'ttt3'"),
+      Row("ttt3", false))
+    sqlContext.sql("""use default""")
+    sqlContext.sql("""drop database if exists testdb8156 CASCADE""")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }

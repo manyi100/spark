@@ -19,13 +19,17 @@ package org.apache.spark.sql.sources
 
 import scala.collection.JavaConversions._
 
+<<<<<<< HEAD
 import java.io.File
 
 import com.google.common.io.Files
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.mapreduce.{JobContext, TaskAttemptContext}
 import org.apache.hadoop.mapreduce.lib.output.FileOutputCommitter
+<<<<<<< HEAD
 import parquet.hadoop.ParquetOutputCommitter
 
 import org.apache.spark.deploy.SparkHadoopUtil
@@ -39,6 +43,22 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
   override val sqlContext: SQLContext = TestHive
 
   import sqlContext._
+=======
+import org.apache.parquet.hadoop.ParquetOutputCommitter
+
+import org.apache.spark.deploy.SparkHadoopUtil
+import org.apache.spark.sql._
+import org.apache.spark.sql.execution.datasources.LogicalRelation
+import org.apache.spark.sql.hive.test.TestHive
+import org.apache.spark.sql.test.SQLTestUtils
+import org.apache.spark.sql.types._
+
+
+abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
+  override lazy val sqlContext: SQLContext = TestHive
+
+  import sqlContext.sql
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   import sqlContext.implicits._
 
   val dataSourceName: String
@@ -49,19 +69,33 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         StructField("a", IntegerType, nullable = false),
         StructField("b", StringType, nullable = false)))
 
+<<<<<<< HEAD
   val testDF = (1 to 3).map(i => (i, s"val_$i")).toDF("a", "b")
 
   val partitionedTestDF1 = (for {
+=======
+  lazy val testDF = (1 to 3).map(i => (i, s"val_$i")).toDF("a", "b")
+
+  lazy val partitionedTestDF1 = (for {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     i <- 1 to 3
     p2 <- Seq("foo", "bar")
   } yield (i, s"val_$i", 1, p2)).toDF("a", "b", "p1", "p2")
 
+<<<<<<< HEAD
   val partitionedTestDF2 = (for {
+=======
+  lazy val partitionedTestDF2 = (for {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     i <- 1 to 3
     p2 <- Seq("foo", "bar")
   } yield (i, s"val_$i", 2, p2)).toDF("a", "b", "p1", "p2")
 
+<<<<<<< HEAD
   val partitionedTestDF = partitionedTestDF1.unionAll(partitionedTestDF2)
+=======
+  lazy val partitionedTestDF = partitionedTestDF1.unionAll(partitionedTestDF2)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   def checkQueries(df: DataFrame): Unit = {
     // Selects everything
@@ -109,7 +143,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       testDF.write.mode(SaveMode.Overwrite).format(dataSourceName).save(file.getCanonicalPath)
 
       checkAnswer(
+<<<<<<< HEAD
         read.format(dataSourceName)
+=======
+        sqlContext.read.format(dataSourceName)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           .option("path", file.getCanonicalPath)
           .option("dataSchema", dataSchema.json)
           .load(),
@@ -123,7 +161,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       testDF.write.mode(SaveMode.Append).format(dataSourceName).save(file.getCanonicalPath)
 
       checkAnswer(
+<<<<<<< HEAD
         read.format(dataSourceName)
+=======
+        sqlContext.read.format(dataSourceName)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           .option("dataSchema", dataSchema.json)
           .load(file.getCanonicalPath).orderBy("a"),
         testDF.unionAll(testDF).orderBy("a").collect())
@@ -132,7 +174,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
 
   test("save()/load() - non-partitioned table - ErrorIfExists") {
     withTempDir { file =>
+<<<<<<< HEAD
       intercept[RuntimeException] {
+=======
+      intercept[AnalysisException] {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         testDF.write.format(dataSourceName).mode(SaveMode.ErrorIfExists).save(file.getCanonicalPath)
       }
     }
@@ -157,7 +203,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         .save(file.getCanonicalPath)
 
       checkQueries(
+<<<<<<< HEAD
         read.format(dataSourceName)
+=======
+        sqlContext.read.format(dataSourceName)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           .option("dataSchema", dataSchema.json)
           .load(file.getCanonicalPath))
     }
@@ -178,7 +228,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         .save(file.getCanonicalPath)
 
       checkAnswer(
+<<<<<<< HEAD
         read.format(dataSourceName)
+=======
+        sqlContext.read.format(dataSourceName)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           .option("dataSchema", dataSchema.json)
           .load(file.getCanonicalPath),
         partitionedTestDF.collect())
@@ -200,7 +254,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         .save(file.getCanonicalPath)
 
       checkAnswer(
+<<<<<<< HEAD
         read.format(dataSourceName)
+=======
+        sqlContext.read.format(dataSourceName)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           .option("dataSchema", dataSchema.json)
           .load(file.getCanonicalPath),
         partitionedTestDF.unionAll(partitionedTestDF).collect())
@@ -222,7 +280,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         .save(file.getCanonicalPath)
 
       checkAnswer(
+<<<<<<< HEAD
         read.format(dataSourceName)
+=======
+        sqlContext.read.format(dataSourceName)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           .option("dataSchema", dataSchema.json)
           .load(file.getCanonicalPath),
         partitionedTestDF.collect())
@@ -231,7 +293,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
 
   test("save()/load() - partitioned table - ErrorIfExists") {
     withTempDir { file =>
+<<<<<<< HEAD
       intercept[RuntimeException] {
+=======
+      intercept[AnalysisException] {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         partitionedTestDF.write
           .format(dataSourceName)
           .mode(SaveMode.ErrorIfExists)
@@ -258,7 +324,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       .saveAsTable("t")
 
     withTable("t") {
+<<<<<<< HEAD
       checkAnswer(table("t"), testDF.collect())
+=======
+      checkAnswer(sqlContext.table("t"), testDF.collect())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -267,7 +337,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
     testDF.write.format(dataSourceName).mode(SaveMode.Append).saveAsTable("t")
 
     withTable("t") {
+<<<<<<< HEAD
       checkAnswer(table("t"), testDF.unionAll(testDF).orderBy("a").collect())
+=======
+      checkAnswer(sqlContext.table("t"), testDF.unionAll(testDF).orderBy("a").collect())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -286,7 +360,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
 
     withTempTable("t") {
       testDF.write.format(dataSourceName).mode(SaveMode.Ignore).saveAsTable("t")
+<<<<<<< HEAD
       assert(table("t").collect().isEmpty)
+=======
+      assert(sqlContext.table("t").collect().isEmpty)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -297,7 +375,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       .saveAsTable("t")
 
     withTable("t") {
+<<<<<<< HEAD
       checkQueries(table("t"))
+=======
+      checkQueries(sqlContext.table("t"))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -317,7 +399,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       .saveAsTable("t")
 
     withTable("t") {
+<<<<<<< HEAD
       checkAnswer(table("t"), partitionedTestDF.collect())
+=======
+      checkAnswer(sqlContext.table("t"), partitionedTestDF.collect())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -337,7 +423,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       .saveAsTable("t")
 
     withTable("t") {
+<<<<<<< HEAD
       checkAnswer(table("t"), partitionedTestDF.unionAll(partitionedTestDF).collect())
+=======
+      checkAnswer(sqlContext.table("t"), partitionedTestDF.unionAll(partitionedTestDF).collect())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -357,7 +447,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       .saveAsTable("t")
 
     withTable("t") {
+<<<<<<< HEAD
       checkAnswer(table("t"), partitionedTestDF.collect())
+=======
+      checkAnswer(sqlContext.table("t"), partitionedTestDF.collect())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -406,7 +500,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         .partitionBy("p1", "p2")
         .saveAsTable("t")
 
+<<<<<<< HEAD
       assert(table("t").collect().isEmpty)
+=======
+      assert(sqlContext.table("t").collect().isEmpty)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -418,7 +516,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         .partitionBy("p1", "p2")
         .save(file.getCanonicalPath)
 
+<<<<<<< HEAD
       val df = read
+=======
+      val df = sqlContext.read
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         .format(dataSourceName)
         .option("dataSchema", dataSchema.json)
         .load(s"${file.getCanonicalPath}/p1=*/p2=???")
@@ -446,7 +548,13 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
     }
   }
 
+<<<<<<< HEAD
   test("Partition column type casting") {
+=======
+  // HadoopFsRelation.discoverPartitions() called by refresh(), which will ignore
+  // the given partition data type.
+  ignore("Partition column type casting") {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     withTempPath { file =>
       val input = partitionedTestDF.select('a, 'b, 'p1.cast(StringType).as('ps), 'p2)
 
@@ -458,7 +566,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
         .saveAsTable("t")
 
       withTempTable("t") {
+<<<<<<< HEAD
         checkAnswer(table("t"), input.collect())
+=======
+        checkAnswer(sqlContext.table("t"), input.collect())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       }
     }
   }
@@ -473,7 +585,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       .saveAsTable("t")
 
     withTable("t") {
+<<<<<<< HEAD
       checkAnswer(table("t"), df.select('b, 'c, 'a).collect())
+=======
+      checkAnswer(sqlContext.table("t"), df.select('b, 'c, 'a).collect())
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }
   }
 
@@ -511,7 +627,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       withTempPath { dir =>
         df.write.mode("append").format(dataSourceName).save(dir.getCanonicalPath)
         configuration.set(
+<<<<<<< HEAD
           SQLConf.OUTPUT_COMMITTER_CLASS,
+=======
+          SQLConf.OUTPUT_COMMITTER_CLASS.key,
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           classOf[AlwaysFailOutputCommitter].getName)
         // Since Parquet has its own output committer setting, also set it
         // to AlwaysFailParquetOutputCommitter at here.
@@ -535,7 +655,11 @@ abstract class HadoopFsRelationTest extends QueryTest with SQLTestUtils {
       }
       withTempPath { dir =>
         configuration.set(
+<<<<<<< HEAD
           SQLConf.OUTPUT_COMMITTER_CLASS,
+=======
+          SQLConf.OUTPUT_COMMITTER_CLASS.key,
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
           classOf[AlwaysFailOutputCommitter].getName)
         // Since Parquet has its own output committer setting, also set it
         // to AlwaysFailParquetOutputCommitter at here.
@@ -579,6 +703,7 @@ class AlwaysFailParquetOutputCommitter(
     sys.error("Intentional job commitment failure for testing purpose.")
   }
 }
+<<<<<<< HEAD
 
 class SimpleTextHadoopFsRelationSuite extends HadoopFsRelationTest {
   override val dataSourceName: String = classOf[SimpleTextSource].getCanonicalName
@@ -741,3 +866,5 @@ class ParquetHadoopFsRelationSuite extends HadoopFsRelationTest {
     }
   }
 }
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

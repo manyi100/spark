@@ -28,7 +28,11 @@ import org.apache.spark.sql.types.DoubleType
 
 /**
  * :: Experimental ::
+<<<<<<< HEAD
  * Evaluator for binary classification, which expects two input columns: score and label.
+=======
+ * Evaluator for binary classification, which expects two input columns: rawPrediction and label.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
  */
 @Experimental
 class BinaryClassificationEvaluator(override val uid: String)
@@ -50,6 +54,13 @@ class BinaryClassificationEvaluator(override val uid: String)
   def setMetricName(value: String): this.type = set(metricName, value)
 
   /** @group setParam */
+  def setRawPredictionCol(value: String): this.type = set(rawPredictionCol, value)
+
+  /**
+   * @group setParam
+   * @deprecated use [[setRawPredictionCol()]] instead
+   */
+  @deprecated("use setRawPredictionCol instead", "1.5.0")
   def setScoreCol(value: String): this.type = set(rawPredictionCol, value)
 
   /** @group setParam */

@@ -21,13 +21,19 @@ import java.io.File
 
 import org.scalatest.BeforeAndAfterAll
 
-import org.apache.spark.sql.{SaveMode, SQLConf, DataFrame}
+import org.apache.spark.sql.{AnalysisException, SaveMode, SQLConf, DataFrame}
 import org.apache.spark.sql.types._
 import org.apache.spark.util.Utils
 
 class SaveLoadSuite extends DataSourceTest with BeforeAndAfterAll {
 
+<<<<<<< HEAD
   import caseInsensitiveContext._
+=======
+  import caseInsensitiveContext.sql
+
+  private lazy val sparkContext = caseInsensitiveContext.sparkContext
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   var originalDefaultSource: String = null
 
@@ -36,25 +42,30 @@ class SaveLoadSuite extends DataSourceTest with BeforeAndAfterAll {
   var df: DataFrame = null
 
   override def beforeAll(): Unit = {
-    originalDefaultSource = conf.defaultDataSourceName
+    originalDefaultSource = caseInsensitiveContext.conf.defaultDataSourceName
 
     path = Utils.createTempDir()
     path.delete()
 
     val rdd = sparkContext.parallelize((1 to 10).map(i => s"""{"a":$i, "b":"str${i}"}"""))
+<<<<<<< HEAD
     df = read.json(rdd)
+=======
+    df = caseInsensitiveContext.read.json(rdd)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     df.registerTempTable("jsonTable")
   }
 
   override def afterAll(): Unit = {
-    conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, originalDefaultSource)
+    caseInsensitiveContext.conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, originalDefaultSource)
   }
 
   after {
-    conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, originalDefaultSource)
+    caseInsensitiveContext.conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, originalDefaultSource)
     Utils.deleteRecursively(path)
   }
 
+<<<<<<< HEAD
   def checkLoad(): Unit = {
     conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "org.apache.spark.sql.json")
     checkAnswer(read.load(path.toString), df.collect())
@@ -71,25 +82,60 @@ class SaveLoadSuite extends DataSourceTest with BeforeAndAfterAll {
 
   test("save with path and load") {
     conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "org.apache.spark.sql.json")
+=======
+  def checkLoad(expectedDF: DataFrame = df, tbl: String = "jsonTable"): Unit = {
+    caseInsensitiveContext.conf.setConf(
+      SQLConf.DEFAULT_DATA_SOURCE_NAME, "org.apache.spark.sql.json")
+    checkAnswer(caseInsensitiveContext.read.load(path.toString), expectedDF.collect())
+
+    // Test if we can pick up the data source name passed in load.
+    caseInsensitiveContext.conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "not a source name")
+    checkAnswer(caseInsensitiveContext.read.format("json").load(path.toString),
+      expectedDF.collect())
+    checkAnswer(caseInsensitiveContext.read.format("json").load(path.toString),
+      expectedDF.collect())
+    val schema = StructType(StructField("b", StringType, true) :: Nil)
+    checkAnswer(
+      caseInsensitiveContext.read.format("json").schema(schema).load(path.toString),
+      sql(s"SELECT b FROM $tbl").collect())
+  }
+
+  test("save with path and load") {
+    caseInsensitiveContext.conf.setConf(
+      SQLConf.DEFAULT_DATA_SOURCE_NAME, "org.apache.spark.sql.json")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     df.write.save(path.toString)
     checkLoad()
   }
 
   test("save with string mode and path, and load") {
+<<<<<<< HEAD
     conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "org.apache.spark.sql.json")
+=======
+    caseInsensitiveContext.conf.setConf(
+      SQLConf.DEFAULT_DATA_SOURCE_NAME, "org.apache.spark.sql.json")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     path.createNewFile()
     df.write.mode("overwrite").save(path.toString)
     checkLoad()
   }
 
   test("save with path and datasource, and load") {
+<<<<<<< HEAD
     conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "not a source name")
+=======
+    caseInsensitiveContext.conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "not a source name")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     df.write.json(path.toString)
     checkLoad()
   }
 
   test("save with data source and options, and load") {
+<<<<<<< HEAD
     conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "not a source name")
+=======
+    caseInsensitiveContext.conf.setConf(SQLConf.DEFAULT_DATA_SOURCE_NAME, "not a source name")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     df.write.mode(SaveMode.ErrorIfExists).json(path.toString)
     checkLoad()
   }
@@ -97,7 +143,11 @@ class SaveLoadSuite extends DataSourceTest with BeforeAndAfterAll {
   test("save and save again") {
     df.write.json(path.toString)
 
+<<<<<<< HEAD
     var message = intercept[RuntimeException] {
+=======
+    val message = intercept[AnalysisException] {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       df.write.json(path.toString)
     }.getMessage
 
@@ -113,12 +163,17 @@ class SaveLoadSuite extends DataSourceTest with BeforeAndAfterAll {
     df.write.mode(SaveMode.Overwrite).json(path.toString)
     checkLoad()
 
+<<<<<<< HEAD
     message = intercept[RuntimeException] {
       df.write.mode(SaveMode.Append).json(path.toString)
     }.getMessage
+=======
+    // verify the append mode
+    df.write.mode(SaveMode.Append).json(path.toString)
+    val df2 = df.unionAll(df)
+    df2.registerTempTable("jsonTable2")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
-    assert(
-      message.contains("Append mode is not supported"),
-      "We should complain that 'Append mode is not supported' for JSON source.")
+    checkLoad(df2, "jsonTable2")
   }
 }

@@ -10,6 +10,14 @@ export("sparkR.init")
 export("sparkR.stop")
 export("print.jobj")
 
+<<<<<<< HEAD
+=======
+# MLlib integration
+exportMethods("glm",
+              "predict",
+              "summary")
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 # Job group lifecycle management methods
 export("setJobGroup",
        "clearJobGroup",
@@ -22,7 +30,13 @@ exportMethods("arrange",
               "collect",
               "columns",
               "count",
+<<<<<<< HEAD
               "describe",
+=======
+              "crosstab",
+              "describe",
+              "dim",
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
               "distinct",
               "dropna",
               "dtypes",
@@ -39,11 +53,16 @@ exportMethods("arrange",
               "isLocal",
               "join",
               "limit",
+              "merge",
+              "names",
+              "ncol",
+              "nrow",
               "orderBy",
               "mutate",
               "names",
               "persist",
               "printSchema",
+              "rbind",
               "registerTempTable",
               "rename",
               "repartition",
@@ -58,8 +77,15 @@ exportMethods("arrange",
               "show",
               "showDF",
               "summarize",
+<<<<<<< HEAD
               "take",
               "unionAll",
+=======
+              "summary",
+              "take",
+              "unionAll",
+              "unique",
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
               "unpersist",
               "where",
               "withColumn",
@@ -77,6 +103,7 @@ exportMethods("abs",
               "atan",
               "atan2",
               "avg",
+              "between",
               "cast",
               "cbrt",
               "ceiling",

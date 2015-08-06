@@ -264,4 +264,10 @@ def _start_update_server():
 
 if __name__ == "__main__":
     import doctest
+<<<<<<< HEAD
     doctest.testmod()
+=======
+    (failure_count, test_count) = doctest.testmod()
+    if failure_count:
+        exit(-1)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

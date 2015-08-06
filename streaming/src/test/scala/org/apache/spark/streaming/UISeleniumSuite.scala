@@ -27,9 +27,13 @@ import org.scalatest.selenium.WebBrowser
 import org.scalatest.time.SpanSugar._
 
 import org.apache.spark._
+<<<<<<< HEAD
+=======
+import org.apache.spark.ui.SparkUICssErrorHandler
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 /**
- * Selenium tests for the Spark Web UI.
+ * Selenium tests for the Spark Streaming Web UI.
  */
 class UISeleniumSuite
   extends SparkFunSuite with WebBrowser with Matchers with BeforeAndAfterAll with TestSuiteBase {
@@ -37,7 +41,9 @@ class UISeleniumSuite
   implicit var webDriver: WebDriver = _
 
   override def beforeAll(): Unit = {
-    webDriver = new HtmlUnitDriver
+    webDriver = new HtmlUnitDriver {
+      getWebClient.setCssErrorHandler(new SparkUICssErrorHandler)
+    }
   }
 
   override def afterAll(): Unit = {
@@ -97,8 +103,13 @@ class UISeleniumSuite
         // Check stat table
         val statTableHeaders = findAll(cssSelector("#stat-table th")).map(_.text).toSeq
         statTableHeaders.exists(
+<<<<<<< HEAD
           _.matches("Timelines \\(Last \\d+ batches, \\d+ active, \\d+ completed\\)")) should be
           (true)
+=======
+          _.matches("Timelines \\(Last \\d+ batches, \\d+ active, \\d+ completed\\)")
+        ) should be (true)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         statTableHeaders should contain ("Histograms")
 
         val statTableCells = findAll(cssSelector("#stat-table td")).map(_.text).toSeq

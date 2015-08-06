@@ -20,6 +20,7 @@ package org.apache.spark.sql
 import org.scalatest.BeforeAndAfterAll
 
 import org.apache.spark.SparkFunSuite
+<<<<<<< HEAD
 import org.apache.spark.sql.test.TestSQLContext
 
 class SQLContextSuite extends SparkFunSuite with BeforeAndAfterAll {
@@ -29,22 +30,44 @@ class SQLContextSuite extends SparkFunSuite with BeforeAndAfterAll {
 
   override def afterAll(): Unit = {
     SQLContext.setLastInstantiatedContext(testSqlContext)
+=======
+
+class SQLContextSuite extends SparkFunSuite with BeforeAndAfterAll {
+
+  private lazy val ctx = org.apache.spark.sql.test.TestSQLContext
+
+  override def afterAll(): Unit = {
+    SQLContext.setLastInstantiatedContext(ctx)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   test("getOrCreate instantiates SQLContext") {
     SQLContext.clearLastInstantiatedContext()
+<<<<<<< HEAD
     val sqlContext = SQLContext.getOrCreate(testSparkContext)
     assert(sqlContext != null, "SQLContext.getOrCreate returned null")
     assert(SQLContext.getOrCreate(testSparkContext).eq(sqlContext),
+=======
+    val sqlContext = SQLContext.getOrCreate(ctx.sparkContext)
+    assert(sqlContext != null, "SQLContext.getOrCreate returned null")
+    assert(SQLContext.getOrCreate(ctx.sparkContext).eq(sqlContext),
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       "SQLContext created by SQLContext.getOrCreate not returned by SQLContext.getOrCreate")
   }
 
   test("getOrCreate gets last explicitly instantiated SQLContext") {
     SQLContext.clearLastInstantiatedContext()
+<<<<<<< HEAD
     val sqlContext = new SQLContext(testSparkContext)
     assert(SQLContext.getOrCreate(testSparkContext) != null,
       "SQLContext.getOrCreate after explicitly created SQLContext returned null")
     assert(SQLContext.getOrCreate(testSparkContext).eq(sqlContext),
+=======
+    val sqlContext = new SQLContext(ctx.sparkContext)
+    assert(SQLContext.getOrCreate(ctx.sparkContext) != null,
+      "SQLContext.getOrCreate after explicitly created SQLContext returned null")
+    assert(SQLContext.getOrCreate(ctx.sparkContext).eq(sqlContext),
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       "SQLContext.getOrCreate after explicitly created SQLContext did not return the context")
   }
 }

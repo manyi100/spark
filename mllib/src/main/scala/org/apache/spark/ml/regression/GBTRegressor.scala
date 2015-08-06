@@ -33,6 +33,11 @@ import org.apache.spark.mllib.tree.loss.{AbsoluteError => OldAbsoluteError, Loss
 import org.apache.spark.mllib.tree.model.{GradientBoostedTreesModel => OldGBTModel}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.DataFrame
+<<<<<<< HEAD
+=======
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.DoubleType
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 /**
  * :: Experimental ::
@@ -167,11 +172,22 @@ final class GBTRegressionModel(
 
   override def treeWeights: Array[Double] = _treeWeights
 
+  override protected def transformImpl(dataset: DataFrame): DataFrame = {
+    val bcastModel = dataset.sqlContext.sparkContext.broadcast(this)
+    val predictUDF = udf { (features: Any) =>
+      bcastModel.value.predict(features.asInstanceOf[Vector])
+    }
+    dataset.withColumn($(predictionCol), predictUDF(col($(featuresCol))))
+  }
+
   override protected def predict(features: Vector): Double = {
-    // TODO: Override transform() to broadcast model. SPARK-7127
     // TODO: When we add a generic Boosting class, handle transform there?  SPARK-7129
     // Classifies by thresholding sum of weighted tree predictions
+<<<<<<< HEAD
     val treePredictions = _trees.map(_.rootNode.predict(features))
+=======
+    val treePredictions = _trees.map(_.rootNode.predictImpl(features).prediction)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     blas.ddot(numTrees, treePredictions, 1, _treeWeights, 1)
   }
 

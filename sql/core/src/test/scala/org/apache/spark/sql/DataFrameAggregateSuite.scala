@@ -19,13 +19,23 @@ package org.apache.spark.sql
 
 import org.apache.spark.sql.TestData._
 import org.apache.spark.sql.functions._
+<<<<<<< HEAD
 import org.apache.spark.sql.test.TestSQLContext
 import org.apache.spark.sql.test.TestSQLContext.implicits._
 import org.apache.spark.sql.types.DecimalType
+=======
+import org.apache.spark.sql.types.{BinaryType, DecimalType}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 
 class DataFrameAggregateSuite extends QueryTest {
 
+<<<<<<< HEAD
+=======
+  private lazy val ctx = org.apache.spark.sql.test.TestSQLContext
+  import ctx.implicits._
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   test("groupBy") {
     checkAnswer(
       testData2.groupBy("a").agg(sum($"b")),
@@ -67,12 +77,20 @@ class DataFrameAggregateSuite extends QueryTest {
       Seq(Row(1, 3), Row(2, 3), Row(3, 3))
     )
 
+<<<<<<< HEAD
     TestSQLContext.conf.setConf("spark.sql.retainGroupColumns", "false")
+=======
+    ctx.conf.setConf(SQLConf.DATAFRAME_RETAIN_GROUP_COLUMNS, false)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     checkAnswer(
       testData2.groupBy("a").agg(sum($"b")),
       Seq(Row(3), Row(3), Row(3))
     )
+<<<<<<< HEAD
     TestSQLContext.conf.setConf("spark.sql.retainGroupColumns", "true")
+=======
+    ctx.conf.setConf(SQLConf.DATAFRAME_RETAIN_GROUP_COLUMNS, true)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   test("agg without groups") {
@@ -189,5 +207,8 @@ class DataFrameAggregateSuite extends QueryTest {
       emptyTableData.agg(sumDistinct('a)),
       Row(null))
   }
+<<<<<<< HEAD
 
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }

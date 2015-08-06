@@ -21,7 +21,7 @@ import scala.collection.JavaConversions._
 import scala.language.implicitConversions
 
 import org.apache.spark.annotation.Experimental
-import org.apache.spark.sql.catalyst.analysis.Star
+import org.apache.spark.sql.catalyst.analysis.{UnresolvedAlias, UnresolvedAttribute, Star}
 import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.plans.logical.{Rollup, Cube, Aggregate}
 import org.apache.spark.sql.types.NumericType
@@ -70,6 +70,7 @@ class GroupedData protected[sql](
     groupingExprs: Seq[Expression],
     private val groupType: GroupedData.GroupType) {
 
+<<<<<<< HEAD
   private[this] def toDF(aggExprs: Seq[NamedExpression]): DataFrame = {
     val aggregates = if (df.sqlContext.conf.dataFrameRetainGroupColumns) {
         val retainedExprs = groupingExprs.map {
@@ -92,6 +93,34 @@ class GroupedData protected[sql](
         DataFrame(
           df.sqlContext, Cube(groupingExprs, df.logicalPlan, aggregates))
     }
+=======
+  private[this] def toDF(aggExprs: Seq[Expression]): DataFrame = {
+    val aggregates = if (df.sqlContext.conf.dataFrameRetainGroupColumns) {
+      groupingExprs ++ aggExprs
+    } else {
+      aggExprs
+    }
+
+    val aliasedAgg = aggregates.map {
+      // Wrap UnresolvedAttribute with UnresolvedAlias, as when we resolve UnresolvedAttribute, we
+      // will remove intermediate Alias for ExtractValue chain, and we need to alias it again to
+      // make it a NamedExpression.
+      case u: UnresolvedAttribute => UnresolvedAlias(u)
+      case expr: NamedExpression => expr
+      case expr: Expression => Alias(expr, expr.prettyString)()
+    }
+    groupType match {
+      case GroupedData.GroupByType =>
+        DataFrame(
+          df.sqlContext, Aggregate(groupingExprs, aliasedAgg, df.logicalPlan))
+      case GroupedData.RollupType =>
+        DataFrame(
+          df.sqlContext, Rollup(groupingExprs, df.logicalPlan, aliasedAgg))
+      case GroupedData.CubeType =>
+        DataFrame(
+          df.sqlContext, Cube(groupingExprs, df.logicalPlan, aliasedAgg))
+    }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   private[this] def aggregateNumericColumns(colNames: String*)(f: Expression => Expression)
@@ -112,10 +141,14 @@ class GroupedData protected[sql](
         namedExpr
       }
     }
+<<<<<<< HEAD
     toDF(columnExprs.map { c =>
       val a = f(c)
       Alias(a, a.prettyString)()
     })
+=======
+    toDF(columnExprs.map(f))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   private[this] def strToExpr(expr: String): (Expression => Expression) = {
@@ -169,8 +202,12 @@ class GroupedData protected[sql](
    */
   def agg(exprs: Map[String, String]): DataFrame = {
     toDF(exprs.map { case (colName, expr) =>
+<<<<<<< HEAD
       val a = strToExpr(expr)(df(colName).expr)
       Alias(a, a.prettyString)()
+=======
+      strToExpr(expr)(df(colName).expr)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     }.toSeq)
   }
 
@@ -224,10 +261,14 @@ class GroupedData protected[sql](
    */
   @scala.annotation.varargs
   def agg(expr: Column, exprs: Column*): DataFrame = {
+<<<<<<< HEAD
     toDF((expr +: exprs).map(_.expr).map {
       case expr: NamedExpression => expr
       case expr: Expression => Alias(expr, expr.prettyString)()
     })
+=======
+    toDF((expr +: exprs).map(_.expr))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   /**

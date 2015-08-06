@@ -54,14 +54,24 @@ public class JavaDataFrameSuite {
     for (int i = 0; i < 10; i++) {
       jsonObjects.add("{\"key\":" + i + ", \"value\":\"str" + i + "\"}");
     }
+<<<<<<< HEAD
     df = hc.jsonRDD(sc.parallelize(jsonObjects));
+=======
+    df = hc.read().json(sc.parallelize(jsonObjects));
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     df.registerTempTable("window_table");
   }
 
   @After
   public void tearDown() throws IOException {
     // Clean up tables.
+<<<<<<< HEAD
     hc.sql("DROP TABLE IF EXISTS window_table");
+=======
+    if (hc != null) {
+      hc.sql("DROP TABLE IF EXISTS window_table");
+    }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   @Test

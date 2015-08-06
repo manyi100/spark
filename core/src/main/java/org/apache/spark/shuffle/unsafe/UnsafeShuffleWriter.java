@@ -27,6 +27,10 @@ import scala.Product2;
 import scala.collection.JavaConversions;
 import scala.reflect.ClassTag;
 import scala.reflect.ClassTag$;
+<<<<<<< HEAD
+=======
+import scala.collection.immutable.Map;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.io.ByteStreams;
@@ -78,8 +82,14 @@ public class UnsafeShuffleWriter<K, V> extends ShuffleWriter<K, V> {
   private final SparkConf sparkConf;
   private final boolean transferToEnabled;
 
+<<<<<<< HEAD
   private MapStatus mapStatus = null;
   private UnsafeShuffleExternalSorter sorter = null;
+=======
+  @Nullable private MapStatus mapStatus;
+  @Nullable private UnsafeShuffleExternalSorter sorter;
+  private long peakMemoryUsedBytes = 0;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   /** Subclass of ByteArrayOutputStream that exposes `buf` directly. */
   private static final class MyByteArrayOutputStream extends ByteArrayOutputStream {
@@ -129,6 +139,33 @@ public class UnsafeShuffleWriter<K, V> extends ShuffleWriter<K, V> {
     open();
   }
 
+<<<<<<< HEAD
+=======
+  @VisibleForTesting
+  public int maxRecordSizeBytes() {
+    assert(sorter != null);
+    return sorter.maxRecordSizeBytes;
+  }
+
+  private void updatePeakMemoryUsed() {
+    // sorter can be null if this writer is closed
+    if (sorter != null) {
+      long mem = sorter.getPeakMemoryUsedBytes();
+      if (mem > peakMemoryUsedBytes) {
+        peakMemoryUsedBytes = mem;
+      }
+    }
+  }
+
+  /**
+   * Return the peak memory used so far, in bytes.
+   */
+  public long getPeakMemoryUsedBytes() {
+    updatePeakMemoryUsed();
+    return peakMemoryUsedBytes;
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   /**
    * This convenience method should only be called in test code.
    */
@@ -139,6 +176,12 @@ public class UnsafeShuffleWriter<K, V> extends ShuffleWriter<K, V> {
 
   @Override
   public void write(scala.collection.Iterator<Product2<K, V>> records) throws IOException {
+<<<<<<< HEAD
+=======
+    // Keep track of success so we know if we encountered an exception
+    // We do this rather than a standard try/catch/re-throw to handle
+    // generic throwables.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     boolean success = false;
     try {
       while (records.hasNext()) {
@@ -147,8 +190,24 @@ public class UnsafeShuffleWriter<K, V> extends ShuffleWriter<K, V> {
       closeAndWriteOutput();
       success = true;
     } finally {
+<<<<<<< HEAD
       if (!success) {
         sorter.cleanupAfterError();
+=======
+      if (sorter != null) {
+        try {
+          sorter.cleanupAfterError();
+        } catch (Exception e) {
+          // Only throw this error if we won't be masking another
+          // error.
+          if (success) {
+            throw e;
+          } else {
+            logger.error("In addition to a failure during writing, we failed during " +
+                         "cleanup.", e);
+          }
+        }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       }
     }
   }
@@ -170,6 +229,11 @@ public class UnsafeShuffleWriter<K, V> extends ShuffleWriter<K, V> {
 
   @VisibleForTesting
   void closeAndWriteOutput() throws IOException {
+<<<<<<< HEAD
+=======
+    assert(sorter != null);
+    updatePeakMemoryUsed();
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     serBuffer = null;
     serOutputStream = null;
     final SpillInfo[] spills = sorter.closeAndGetSpills();
@@ -190,6 +254,10 @@ public class UnsafeShuffleWriter<K, V> extends ShuffleWriter<K, V> {
 
   @VisibleForTesting
   void insertRecordIntoSorter(Product2<K, V> record) throws IOException {
+<<<<<<< HEAD
+=======
+    assert(sorter != null);
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     final K key = record._1();
     final int partitionId = partitioner.getPartition(key);
     serBuffer.reset();
@@ -412,6 +480,17 @@ public class UnsafeShuffleWriter<K, V> extends ShuffleWriter<K, V> {
   @Override
   public Option<MapStatus> stop(boolean success) {
     try {
+<<<<<<< HEAD
+=======
+      // Update task metrics from accumulators (null in UnsafeShuffleWriterSuite)
+      Map<String, Accumulator<Object>> internalAccumulators =
+        taskContext.internalMetricsToAccumulators();
+      if (internalAccumulators != null) {
+        internalAccumulators.apply(InternalAccumulator.PEAK_EXECUTION_MEMORY())
+          .add(getPeakMemoryUsedBytes());
+      }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       if (stopping) {
         return Option.apply(null);
       } else {

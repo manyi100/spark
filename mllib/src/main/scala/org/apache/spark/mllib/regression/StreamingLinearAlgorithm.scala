@@ -84,6 +84,7 @@ abstract class StreamingLinearAlgorithm[
     }
     data.foreachRDD { (rdd, time) =>
       if (!rdd.isEmpty) {
+<<<<<<< HEAD
         val initialWeights =
           model match {
             case Some(m) =>
@@ -93,6 +94,9 @@ abstract class StreamingLinearAlgorithm[
               Vectors.dense(numFeatures)
           }
         model = Some(algorithm.run(rdd, initialWeights))
+=======
+        model = Some(algorithm.run(rdd, model.get.weights))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         logInfo(s"Model updated at time ${time.toString}")
         val display = model.get.weights.size match {
           case x if x > 100 => model.get.weights.toArray.take(100).mkString("[", ",", "...")

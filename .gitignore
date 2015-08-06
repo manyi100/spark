@@ -66,6 +66,10 @@ scalastyle-output.xml
 R-unit-tests.log
 R/unit-tests.out
 python/lib/pyspark.zip
+<<<<<<< HEAD
+=======
+lint-r-report.log
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 # For Hive
 metastore_db/

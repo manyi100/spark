@@ -22,12 +22,20 @@ import scala.util.Random
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars
 import org.openqa.selenium.WebDriver
 import org.openqa.selenium.htmlunit.HtmlUnitDriver
+<<<<<<< HEAD
+=======
+import org.scalatest.{BeforeAndAfterAll, Matchers}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.scalatest.concurrent.Eventually._
 import org.scalatest.selenium.WebBrowser
 import org.scalatest.time.SpanSugar._
 import org.scalatest.{BeforeAndAfterAll, Matchers}
 
 import org.apache.spark.sql.hive.HiveContext
+<<<<<<< HEAD
+=======
+import org.apache.spark.ui.SparkUICssErrorHandler
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 class UISeleniumSuite
   extends HiveThriftJdbcTest
@@ -40,7 +48,9 @@ class UISeleniumSuite
   override def mode: ServerMode.Value = ServerMode.binary
 
   override def beforeAll(): Unit = {
-    webDriver = new HtmlUnitDriver
+    webDriver = new HtmlUnitDriver {
+      getWebClient.setCssErrorHandler(new SparkUICssErrorHandler)
+    }
     super.beforeAll()
   }
 

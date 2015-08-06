@@ -48,7 +48,7 @@ follows:
   <tr><th style="width:21%">Environment Variable</th><th>Meaning</th></tr>
   <tr>
     <td><code>SPARK_DAEMON_MEMORY</code></td>
-    <td>Memory to allocate to the history server (default: 512m).</td>
+    <td>Memory to allocate to the history server (default: 1g).</td>
   </tr>
   <tr>
     <td><code>SPARK_DAEMON_JAVA_OPTS</code></td>
@@ -228,6 +228,17 @@ for a running application, at `http://localhost:4040/api/v1`.
     <td><code>/applications/[app-id]/storage/rdd/[rdd-id]</code></td>
     <td>Details for the storage status of a given RDD</td>
   </tr>
+<<<<<<< HEAD
+=======
+  <tr>
+    <td><code>/applications/[app-id]/logs</code></td>
+    <td>Download the event logs for all attempts of the given application as a zip file</td>
+  </tr>
+  <tr>
+    <td><code>/applications/[app-id]/[attempt-id]/logs</code></td>
+    <td>Download the event logs for the specified attempt of the given application as a zip file</td>
+  </tr>
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 </table>
 
 When running on Yarn, each application has multiple attempts, so `[app-id]` is actually

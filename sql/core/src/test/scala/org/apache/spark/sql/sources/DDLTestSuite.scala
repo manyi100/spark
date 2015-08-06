@@ -19,7 +19,9 @@ package org.apache.spark.sql.sources
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.catalyst.InternalRow
 import org.apache.spark.sql.types._
+import org.apache.spark.unsafe.types.UTF8String
 
 class DDLScanSource extends RelationProvider {
   override def createRelation(
@@ -42,7 +44,11 @@ case class SimpleDDLScan(from: Int, to: Int, table: String)(@transient val sqlCo
       StructField("doubleType", DoubleType, nullable = false),
       StructField("bigintType", LongType, nullable = false),
       StructField("tinyintType", ByteType, nullable = false),
+<<<<<<< HEAD
       StructField("decimalType", DecimalType.Unlimited, nullable = false),
+=======
+      StructField("decimalType", DecimalType.USER_DEFAULT, nullable = false),
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       StructField("fixedDecimalType", DecimalType(5, 1), nullable = false),
       StructField("binaryType", BinaryType, nullable = false),
       StructField("booleanType", BooleanType, nullable = false),
@@ -56,26 +62,33 @@ case class SimpleDDLScan(from: Int, to: Int, table: String)(@transient val sqlCo
       )
     ))
 
+  override def needConversion: Boolean = false
 
   override def buildScan(): RDD[Row] = {
-    sqlContext.sparkContext.parallelize(from to to).map(e => Row(s"people$e", e * 2))
+    // Rely on a type erasure hack to pass RDD[InternalRow] back as RDD[Row]
+    sqlContext.sparkContext.parallelize(from to to).map { e =>
+      InternalRow(UTF8String.fromString(s"people$e"), e * 2)
+    }.asInstanceOf[RDD[Row]]
   }
 }
 
 class DDLTestSuite extends DataSourceTest {
+<<<<<<< HEAD
   import caseInsensitiveContext._
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   before {
-      sql(
-          """
-          |CREATE TEMPORARY TABLE ddlPeople
-          |USING org.apache.spark.sql.sources.DDLScanSource
-          |OPTIONS (
-          |  From '1',
-          |  To '10',
-          |  Table 'test1'
-          |)
-          """.stripMargin)
+    caseInsensitiveContext.sql(
+      """
+      |CREATE TEMPORARY TABLE ddlPeople
+      |USING org.apache.spark.sql.sources.DDLScanSource
+      |OPTIONS (
+      |  From '1',
+      |  To '10',
+      |  Table 'test1'
+      |)
+      """.stripMargin)
   }
 
   sqlTest(
@@ -100,7 +113,12 @@ class DDLTestSuite extends DataSourceTest {
       ))
 
   test("SPARK-7686 DescribeCommand should have correct physical plan output attributes") {
+<<<<<<< HEAD
     val attributes = sql("describe ddlPeople").queryExecution.executedPlan.output
+=======
+    val attributes = caseInsensitiveContext.sql("describe ddlPeople")
+      .queryExecution.executedPlan.output
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     assert(attributes.map(_.name) === Seq("col_name", "data_type", "comment"))
     assert(attributes.map(_.dataType).toSet === Set(StringType))
   }

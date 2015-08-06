@@ -17,27 +17,22 @@
 
 package org.apache.spark.rdd
 
-import java.io.IOException
-
 import scala.reflect.ClassTag
 
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.Path
-
-import org.apache.spark._
-import org.apache.spark.broadcast.Broadcast
-import org.apache.spark.deploy.SparkHadoopUtil
-import org.apache.spark.util.Utils
-
-private[spark] class CheckpointRDDPartition(val index: Int) extends Partition {}
+import org.apache.spark.{Partition, SparkContext, TaskContext}
 
 /**
- * This RDD represents a RDD checkpoint file (similar to HadoopRDD).
+ * An RDD partition used to recover checkpointed data.
  */
-private[spark]
-class CheckpointRDD[T: ClassTag](sc: SparkContext, val checkpointPath: String)
+private[spark] class CheckpointRDDPartition(val index: Int) extends Partition
+
+/**
+ * An RDD that recovers checkpointed data from storage.
+ */
+private[spark] abstract class CheckpointRDD[T: ClassTag](@transient sc: SparkContext)
   extends RDD[T](sc, Nil) {
 
+<<<<<<< HEAD
   val broadcastedConf = sc.broadcast(new SerializableWritable(sc.hadoopConfiguration))
 
   @transient val fs = new Path(checkpointPath).getFileSystem(sc.hadoopConfiguration)
@@ -150,25 +145,18 @@ private[spark] object CheckpointRDD extends Logging {
 
     deserializeStream.asIterator.asInstanceOf[Iterator[T]]
   }
+=======
+  // CheckpointRDD should not be checkpointed again
+  override def doCheckpoint(): Unit = { }
+  override def checkpoint(): Unit = { }
+  override def localCheckpoint(): this.type = this
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
-  // Test whether CheckpointRDD generate expected number of partitions despite
-  // each split file having multiple blocks. This needs to be run on a
-  // cluster (mesos or standalone) using HDFS.
-  def main(args: Array[String]) {
-    import org.apache.spark._
+  // Note: There is a bug in MiMa that complains about `AbstractMethodProblem`s in the
+  // base [[org.apache.spark.rdd.RDD]] class if we do not override the following methods.
+  // scalastyle:off
+  protected override def getPartitions: Array[Partition] = ???
+  override def compute(p: Partition, tc: TaskContext): Iterator[T] = ???
+  // scalastyle:on
 
-    val Array(cluster, hdfsPath) = args
-    val env = SparkEnv.get
-    val sc = new SparkContext(cluster, "CheckpointRDD Test")
-    val rdd = sc.makeRDD(1 to 10, 10).flatMap(x => 1 to 10000)
-    val path = new Path(hdfsPath, "temp")
-    val conf = SparkHadoopUtil.get.newConfiguration(new SparkConf())
-    val fs = path.getFileSystem(conf)
-    val broadcastedConf = sc.broadcast(new SerializableWritable(conf))
-    sc.runJob(rdd, CheckpointRDD.writeToFile[Int](path.toString, broadcastedConf, 1024) _)
-    val cpRDD = new CheckpointRDD[Int](sc, path.toString)
-    assert(cpRDD.partitions.length == rdd.partitions.length, "Number of partitions is not the same")
-    assert(cpRDD.collect.toList == rdd.collect.toList, "Data of partitions not the same")
-    fs.delete(path, true)
-  }
 }

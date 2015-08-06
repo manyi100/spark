@@ -25,6 +25,7 @@ import scala.util.Try
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.hadoop.mapreduce.Job
+<<<<<<< HEAD
 import parquet.format.converter.ParquetMetadataConverter
 import parquet.hadoop.metadata.{FileMetaData, ParquetMetadata}
 import parquet.hadoop.util.ContextUtil
@@ -38,16 +39,22 @@ import org.apache.spark.sql.AnalysisException
 import org.apache.spark.sql.catalyst.expressions.{Attribute, AttributeReference}
 import org.apache.spark.sql.types._
 
+=======
+import org.apache.parquet.format.converter.ParquetMetadataConverter
+import org.apache.parquet.hadoop.metadata.{FileMetaData, ParquetMetadata}
+import org.apache.parquet.hadoop.util.ContextUtil
+import org.apache.parquet.hadoop.{Footer, ParquetFileReader, ParquetFileWriter}
+import org.apache.parquet.schema.MessageType
 
-/** A class representing Parquet info fields we care about, for passing back to Parquet */
-private[parquet] case class ParquetTypeInfo(
-  primitiveType: ParquetPrimitiveTypeName,
-  originalType: Option[ParquetOriginalType] = None,
-  decimalMetadata: Option[DecimalMetadata] = None,
-  length: Option[Int] = None)
+import org.apache.spark.Logging
+import org.apache.spark.sql.catalyst.expressions.Attribute
+import org.apache.spark.sql.types._
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+
 
 private[parquet] object ParquetTypesConverter extends Logging {
   def isPrimitiveType(ctype: DataType): Boolean = ctype match {
+<<<<<<< HEAD
     case _: NumericType | BooleanType | StringType | BinaryType => true
     case _: DataType => false
   }
@@ -235,6 +242,10 @@ private[parquet] object ParquetTypesConverter extends Logging {
         Some(new DecimalMetadata(precision, scale)),
         Some(BYTES_FOR_PRECISION(precision))))
     case _ => None
+=======
+    case _: NumericType | BooleanType | DateType | TimestampType | StringType | BinaryType => true
+    case _ => false
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   /**
@@ -248,6 +259,7 @@ private[parquet] object ParquetTypesConverter extends Logging {
     length
   }
 
+<<<<<<< HEAD
   /**
    * Converts a given Catalyst [[org.apache.spark.sql.types.DataType]] into
    * the corresponding Parquet `Type`.
@@ -396,6 +408,11 @@ private[parquet] object ParquetTypesConverter extends Logging {
         fromDataType(attribute.dataType, attribute.name, attribute.nullable,
                      toThriftSchemaNames = toThriftSchemaNames))
     new MessageType("root", fields)
+=======
+  def convertFromAttributes(attributes: Seq[Attribute]): MessageType = {
+    val converter = new CatalystSchemaConverter()
+    converter.convert(StructType.fromAttributes(attributes))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   def convertFromString(string: String): Seq[Attribute] = {
@@ -405,6 +422,7 @@ private[parquet] object ParquetTypesConverter extends Logging {
     }
   }
 
+<<<<<<< HEAD
   private def checkSpecialCharacters(schema: Seq[Attribute]) = {
     // ,;{}()\n\t= and space character are special characters in Parquet schema
     schema.map(_.name).foreach { name =>
@@ -417,8 +435,10 @@ private[parquet] object ParquetTypesConverter extends Logging {
     }
   }
 
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   def convertToString(schema: Seq[Attribute]): String = {
-    checkSpecialCharacters(schema)
+    schema.map(_.name).foreach(CatalystSchemaConverter.checkFieldName)
     StructType.fromAttributes(schema).json
   }
 
@@ -446,12 +466,11 @@ private[parquet] object ParquetTypesConverter extends Logging {
     }
     val extraMetadata = new java.util.HashMap[String, String]()
     extraMetadata.put(
-      RowReadSupport.SPARK_METADATA_KEY,
+      CatalystReadSupport.SPARK_METADATA_KEY,
       ParquetTypesConverter.convertToString(attributes))
     // TODO: add extra data, e.g., table name, date, etc.?
 
-    val parquetSchema: MessageType =
-      ParquetTypesConverter.convertFromAttributes(attributes)
+    val parquetSchema: MessageType = ParquetTypesConverter.convertFromAttributes(attributes)
     val metaData: FileMetaData = new FileMetaData(
       parquetSchema,
       extraMetadata,
@@ -508,36 +527,5 @@ private[parquet] object ParquetTypesConverter extends Logging {
       .map(ParquetFileReader.readFooter(conf, _, ParquetMetadataConverter.NO_FILTER))
       .getOrElse(
         throw new IllegalArgumentException(s"Could not find Parquet metadata at path $path"))
-  }
-
-  /**
-   * Reads in Parquet Metadata from the given path and tries to extract the schema
-   * (Catalyst attributes) from the application-specific key-value map. If this
-   * is empty it falls back to converting from the Parquet file schema which
-   * may lead to an upcast of types (e.g., {byte, short} to int).
-   *
-   * @param origPath The path at which we expect one (or more) Parquet files.
-   * @param conf The Hadoop configuration to use.
-   * @return A list of attributes that make up the schema.
-   */
-  def readSchemaFromFile(
-      origPath: Path,
-      conf: Option[Configuration],
-      isBinaryAsString: Boolean,
-      isInt96AsTimestamp: Boolean): Seq[Attribute] = {
-    val keyValueMetadata: java.util.Map[String, String] =
-      readMetaData(origPath, conf)
-        .getFileMetaData
-        .getKeyValueMetaData
-    if (keyValueMetadata.get(RowReadSupport.SPARK_METADATA_KEY) != null) {
-      convertFromString(keyValueMetadata.get(RowReadSupport.SPARK_METADATA_KEY))
-    } else {
-      val attributes = convertToAttributes(
-        readMetaData(origPath, conf).getFileMetaData.getSchema,
-        isBinaryAsString,
-        isInt96AsTimestamp)
-      log.info(s"Falling back to schema conversion from Parquet types; result: $attributes")
-      attributes
-    }
   }
 }

@@ -30,7 +30,11 @@ import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util.{Identifiable, SchemaUtils}
 import org.apache.spark.mllib.linalg.{DenseVector, SparseVector, Vector, VectorUDT}
 import org.apache.spark.sql.{DataFrame, Row}
+<<<<<<< HEAD
 import org.apache.spark.sql.functions.callUDF
+=======
+import org.apache.spark.sql.functions.udf
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.types.{StructField, StructType}
 import org.apache.spark.util.collection.OpenHashSet
 
@@ -339,7 +343,12 @@ class VectorIndexerModel private[ml] (
   override def transform(dataset: DataFrame): DataFrame = {
     transformSchema(dataset.schema, logging = true)
     val newField = prepOutputField(dataset.schema)
+<<<<<<< HEAD
     val newCol = callUDF(transformFunc, new VectorUDT, dataset($(inputCol)))
+=======
+    val transformUDF = udf { (vector: Vector) => transformFunc(vector) }
+    val newCol = transformUDF(dataset($(inputCol)))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     dataset.withColumn($(outputCol), newCol.as($(outputCol), newField.metadata))
   }
 

@@ -19,6 +19,10 @@ import numpy as np
 from numpy import array
 
 from pyspark import RDD
+<<<<<<< HEAD
+=======
+from pyspark.streaming.dstream import DStream
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 from pyspark.mllib.common import callMLlibFunc, _py2java, _java2py, inherit_doc
 from pyspark.mllib.linalg import SparseVector, Vectors, _convert_to_vector
 from pyspark.mllib.util import Saveable, Loader
@@ -96,9 +100,11 @@ class LinearRegressionModelBase(LinearModel):
 
     def predict(self, x):
         """
-        Predict the value of the dependent variable given a vector x
-        containing values for the independent variables.
+        Predict the value of the dependent variable given a vector or
+        an RDD of vectors containing values for the independent variables.
         """
+        if isinstance(x, RDD):
+            return x.map(self.predict)
         x = _convert_to_vector(x)
         return self.weights.dot(x) + self.intercept
 
@@ -122,6 +128,8 @@ class LinearRegressionModel(LinearRegressionModelBase):
     >>> abs(lrm.predict(np.array([1.0])) - 1) < 0.5
     True
     >>> abs(lrm.predict(SparseVector(1, {0: 1.0})) - 1) < 0.5
+    True
+    >>> abs(lrm.predict(sc.parallelize([[1.0]])).collect()[0] - 1) < 0.5
     True
     >>> import os, tempfile
     >>> path = tempfile.mkdtemp()
@@ -266,6 +274,8 @@ class LassoModel(LinearRegressionModelBase):
     True
     >>> abs(lrm.predict(SparseVector(1, {0: 1.0})) - 1) < 0.5
     True
+    >>> abs(lrm.predict(sc.parallelize([[1.0]])).collect()[0] - 1) < 0.5
+    True
     >>> import os, tempfile
     >>> path = tempfile.mkdtemp()
     >>> lrm.save(sc, path)
@@ -380,6 +390,8 @@ class RidgeRegressionModel(LinearRegressionModelBase):
     >>> abs(lrm.predict(np.array([1.0])) - 1) < 0.5
     True
     >>> abs(lrm.predict(SparseVector(1, {0: 1.0})) - 1) < 0.5
+    True
+    >>> abs(lrm.predict(sc.parallelize([[1.0]])).collect()[0] - 1) < 0.5
     True
     >>> import os, tempfile
     >>> path = tempfile.mkdtemp()
@@ -570,6 +582,98 @@ class IsotonicRegression(object):
         return IsotonicRegressionModel(boundaries.toArray(), predictions.toArray(), isotonic)
 
 
+<<<<<<< HEAD
+=======
+class StreamingLinearAlgorithm(object):
+    """
+    Base class that has to be inherited by any StreamingLinearAlgorithm.
+
+    Prevents reimplementation of methods predictOn and predictOnValues.
+    """
+    def __init__(self, model):
+        self._model = model
+
+    def latestModel(self):
+        """
+        Returns the latest model.
+        """
+        return self._model
+
+    def _validate(self, dstream):
+        if not isinstance(dstream, DStream):
+            raise TypeError(
+                "dstream should be a DStream object, got %s" % type(dstream))
+        if not self._model:
+            raise ValueError(
+                "Model must be intialized using setInitialWeights")
+
+    def predictOn(self, dstream):
+        """
+        Make predictions on a dstream.
+
+        :return: Transformed dstream object.
+        """
+        self._validate(dstream)
+        return dstream.map(lambda x: self._model.predict(x))
+
+    def predictOnValues(self, dstream):
+        """
+        Make predictions on a keyed dstream.
+
+        :return: Transformed dstream object.
+        """
+        self._validate(dstream)
+        return dstream.mapValues(lambda x: self._model.predict(x))
+
+
+@inherit_doc
+class StreamingLinearRegressionWithSGD(StreamingLinearAlgorithm):
+    """
+    Run LinearRegression with SGD on a batch of data.
+
+    The problem minimized is (1 / n_samples) * (y - weights'X)**2.
+    After training on a batch of data, the weights obtained at the end of
+    training are used as initial weights for the next batch.
+
+    :param: stepSize Step size for each iteration of gradient descent.
+    :param: numIterations Total number of iterations run.
+    :param: miniBatchFraction Fraction of data on which SGD is run for each
+                              iteration.
+    """
+    def __init__(self, stepSize=0.1, numIterations=50, miniBatchFraction=1.0):
+        self.stepSize = stepSize
+        self.numIterations = numIterations
+        self.miniBatchFraction = miniBatchFraction
+        self._model = None
+        super(StreamingLinearRegressionWithSGD, self).__init__(
+            model=self._model)
+
+    def setInitialWeights(self, initialWeights):
+        """
+        Set the initial value of weights.
+
+        This must be set before running trainOn and predictOn
+        """
+        initialWeights = _convert_to_vector(initialWeights)
+        self._model = LinearRegressionModel(initialWeights, 0)
+        return self
+
+    def trainOn(self, dstream):
+        """Train the model on the incoming dstream."""
+        self._validate(dstream)
+
+        def update(rdd):
+            # LinearRegressionWithSGD.train raises an error for an empty RDD.
+            if not rdd.isEmpty():
+                self._model = LinearRegressionWithSGD.train(
+                    rdd, self.numIterations, self.stepSize,
+                    self.miniBatchFraction, self._model.weights,
+                    self._model.intercept)
+
+        dstream.foreachRDD(update)
+
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 def _test():
     import doctest
     from pyspark import SparkContext

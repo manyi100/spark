@@ -30,6 +30,10 @@ import org.apache.spark.sql.hive.HiveContext
  */
 object Main {
   def main(args: Array[String]) {
+<<<<<<< HEAD
+=======
+    // scalastyle:off println
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     println("Running regression test for SPARK-8489.")
     val sc = new SparkContext("local", "testing")
     val hc = new HiveContext(sc)
@@ -38,6 +42,10 @@ object Main {
     val df = hc.createDataFrame(Seq(MyCoolClass("1", "2", "3")))
     df.collect()
     println("Regression test for SPARK-8489 success!")
+<<<<<<< HEAD
+=======
+    // scalastyle:on println
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     sc.stop()
   }
 }

@@ -20,7 +20,7 @@ package org.apache.spark.ml.classification
 import org.apache.spark.annotation.DeveloperApi
 import org.apache.spark.ml.param.shared._
 import org.apache.spark.ml.util.SchemaUtils
-import org.apache.spark.mllib.linalg.{Vector, VectorUDT}
+import org.apache.spark.mllib.linalg.{DenseVector, Vector, VectorUDT, Vectors}
 import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.{DoubleType, DataType, StructType}
@@ -29,8 +29,7 @@ import org.apache.spark.sql.types.{DoubleType, DataType, StructType}
  * (private[classification])  Params for probabilistic classification.
  */
 private[classification] trait ProbabilisticClassifierParams
-  extends ClassifierParams with HasProbabilityCol {
-
+  extends ClassifierParams with HasProbabilityCol with HasThresholds {
   override protected def validateAndTransformSchema(
       schema: StructType,
       fitting: Boolean,
@@ -59,6 +58,9 @@ private[spark] abstract class ProbabilisticClassifier[
 
   /** @group setParam */
   def setProbabilityCol(value: String): E = set(probabilityCol, value).asInstanceOf[E]
+
+  /** @group setParam */
+  def setThresholds(value: Array[Double]): E = set(thresholds, value).asInstanceOf[E]
 }
 
 
@@ -80,6 +82,9 @@ private[spark] abstract class ProbabilisticClassificationModel[
   /** @group setParam */
   def setProbabilityCol(value: String): M = set(probabilityCol, value).asInstanceOf[M]
 
+  /** @group setParam */
+  def setThresholds(value: Array[Double]): M = set(thresholds, value).asInstanceOf[M]
+
   /**
    * Transforms dataset by reading from [[featuresCol]], and appending new columns as specified by
    * parameters:
@@ -92,12 +97,21 @@ private[spark] abstract class ProbabilisticClassificationModel[
    */
   override def transform(dataset: DataFrame): DataFrame = {
     transformSchema(dataset.schema, logging = true)
+<<<<<<< HEAD
+=======
+    if (isDefined(thresholds)) {
+      require($(thresholds).length == numClasses, this.getClass.getSimpleName +
+        ".transform() called with non-matching numClasses and thresholds.length." +
+        s" numClasses=$numClasses, but thresholds has length ${$(thresholds).length}")
+    }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
     // Output selected columns only.
     // This is a bit complicated since it tries to avoid repeated computation.
     var outputData = dataset
     var numColsOutput = 0
     if ($(rawPredictionCol).nonEmpty) {
+<<<<<<< HEAD
       outputData = outputData.withColumn(getRawPredictionCol,
         callUDF(predictRaw _, new VectorUDT, col(getFeaturesCol)))
       numColsOutput += 1
@@ -122,6 +136,40 @@ private[spark] abstract class ProbabilisticClassificationModel[
       outputData = outputData.withColumn($(predictionCol), predUDF)
       numColsOutput += 1
     }
+=======
+      val predictRawUDF = udf { (features: Any) =>
+        predictRaw(features.asInstanceOf[FeaturesType])
+      }
+      outputData = outputData.withColumn(getRawPredictionCol, predictRawUDF(col(getFeaturesCol)))
+      numColsOutput += 1
+    }
+    if ($(probabilityCol).nonEmpty) {
+      val probUDF = if ($(rawPredictionCol).nonEmpty) {
+        udf(raw2probability _).apply(col($(rawPredictionCol)))
+      } else {
+        val probabilityUDF = udf { (features: Any) =>
+          predictProbability(features.asInstanceOf[FeaturesType])
+        }
+        probabilityUDF(col($(featuresCol)))
+      }
+      outputData = outputData.withColumn($(probabilityCol), probUDF)
+      numColsOutput += 1
+    }
+    if ($(predictionCol).nonEmpty) {
+      val predUDF = if ($(rawPredictionCol).nonEmpty) {
+        udf(raw2prediction _).apply(col($(rawPredictionCol)))
+      } else if ($(probabilityCol).nonEmpty) {
+        udf(probability2prediction _).apply(col($(probabilityCol)))
+      } else {
+        val predictUDF = udf { (features: Any) =>
+          predict(features.asInstanceOf[FeaturesType])
+        }
+        predictUDF(col($(featuresCol)))
+      }
+      outputData = outputData.withColumn($(predictionCol), predUDF)
+      numColsOutput += 1
+    }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
     if (numColsOutput == 0) {
       this.logWarning(s"$uid: ProbabilisticClassificationModel.transform() was called as NOOP" +
@@ -147,6 +195,17 @@ private[spark] abstract class ProbabilisticClassificationModel[
     raw2probabilityInPlace(probs)
   }
 
+<<<<<<< HEAD
+=======
+  override protected def raw2prediction(rawPrediction: Vector): Double = {
+    if (!isDefined(thresholds)) {
+      rawPrediction.argmax
+    } else {
+      probability2prediction(raw2probability(rawPrediction))
+    }
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   /**
    * Predict the probability of each class given the features.
    * These predictions are also called class conditional probabilities.
@@ -154,6 +213,7 @@ private[spark] abstract class ProbabilisticClassificationModel[
    * This internal method is used to implement [[transform()]] and output [[probabilityCol]].
    *
    * @return Estimated class conditional probabilities
+<<<<<<< HEAD
    */
   protected def predictProbability(features: FeaturesType): Vector = {
     val rawPreds = predictRaw(features)
@@ -166,4 +226,54 @@ private[spark] abstract class ProbabilisticClassificationModel[
    * @return  predicted label
    */
   protected def probability2prediction(probability: Vector): Double = probability.toDense.argmax
+=======
+   */
+  protected def predictProbability(features: FeaturesType): Vector = {
+    val rawPreds = predictRaw(features)
+    raw2probabilityInPlace(rawPreds)
+  }
+
+  /**
+   * Given a vector of class conditional probabilities, select the predicted label.
+   * This supports thresholds which favor particular labels.
+   * @return  predicted label
+   */
+  protected def probability2prediction(probability: Vector): Double = {
+    if (!isDefined(thresholds)) {
+      probability.argmax
+    } else {
+      val thresholds: Array[Double] = getThresholds
+      val scaledProbability: Array[Double] =
+        probability.toArray.zip(thresholds).map { case (p, t) =>
+          if (t == 0.0) Double.PositiveInfinity else p / t
+        }
+      Vectors.dense(scaledProbability).argmax
+    }
+  }
+}
+
+private[ml] object ProbabilisticClassificationModel {
+
+  /**
+   * Normalize a vector of raw predictions to be a multinomial probability vector, in place.
+   *
+   * The input raw predictions should be >= 0.
+   * The output vector sums to 1, unless the input vector is all-0 (in which case the output is
+   * all-0 too).
+   *
+   * NOTE: This is NOT applicable to all models, only ones which effectively use class
+   *       instance counts for raw predictions.
+   */
+  def normalizeToProbabilitiesInPlace(v: DenseVector): Unit = {
+    val sum = v.values.sum
+    if (sum != 0) {
+      var i = 0
+      val size = v.size
+      while (i < size) {
+        v.values(i) /= sum
+        i += 1
+      }
+    }
+  }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }

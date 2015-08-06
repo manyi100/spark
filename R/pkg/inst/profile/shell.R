@@ -27,7 +27,26 @@
   sc <- SparkR::sparkR.init()
   assign("sc", sc, envir=.GlobalEnv)
   sqlContext <- SparkR::sparkRSQL.init(sc)
+<<<<<<< HEAD
   assign("sqlContext", sqlContext, envir=.GlobalEnv)
   cat("\n Welcome to SparkR!")
+=======
+  sparkVer <- SparkR:::callJMethod(sc, "version")
+  assign("sqlContext", sqlContext, envir=.GlobalEnv)
+  cat("\n Welcome to")
+  cat("\n")
+  cat("    ____              __", "\n")
+  cat("   / __/__  ___ _____/ /__", "\n")
+  cat("  _\\ \\/ _ \\/ _ `/ __/  '_/", "\n")
+  cat(" /___/ .__/\\_,_/_/ /_/\\_\\")
+  if (nchar(sparkVer) == 0) {
+    cat("\n")
+  } else {
+    cat("   version ", sparkVer, "\n") 
+  }
+  cat("    /_/", "\n")
+  cat("\n")
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   cat("\n Spark context is available as sc, SQL context is available as sqlContext\n")
 }

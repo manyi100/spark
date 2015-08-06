@@ -86,7 +86,9 @@ infer_type <- function(x) {
 createDataFrame <- function(sqlContext, data, schema = NULL, samplingRatio = 1.0) {
   if (is.data.frame(data)) {
       # get the names of columns, they will be put into RDD
-      schema <- names(data)
+      if (is.null(schema)) {
+        schema <- names(data)
+      }
       n <- nrow(data)
       m <- ncol(data)
       # get rid of factor type
@@ -455,7 +457,7 @@ dropTempTable <- function(sqlContext, tableName) {
 read.df <- function(sqlContext, path = NULL, source = NULL, schema = NULL, ...) {
   options <- varargsToEnv(...)
   if (!is.null(path)) {
-    options[['path']] <- path
+    options[["path"]] <- path
   }
   if (is.null(source)) {
     sqlContext <- get(".sparkRSQLsc", envir = .sparkREnv)
@@ -469,6 +471,21 @@ read.df <- function(sqlContext, path = NULL, source = NULL, schema = NULL, ...) 
   } else {
     sdf <- callJStatic("org.apache.spark.sql.api.r.SQLUtils", "loadDF", sqlContext, source, options)
   }
+<<<<<<< HEAD
+  if (is.null(source)) {
+    sqlContext <- get(".sparkRSQLsc", envir = .sparkREnv)
+    source <- callJMethod(sqlContext, "getConf", "spark.sql.sources.default",
+                          "org.apache.spark.sql.parquet")
+  }
+  if (!is.null(schema)) {
+    stopifnot(class(schema) == "structType")
+    sdf <- callJStatic("org.apache.spark.sql.api.r.SQLUtils", "loadDF", sqlContext, source,
+                       schema$jobj, options)
+  } else {
+    sdf <- callJStatic("org.apache.spark.sql.api.r.SQLUtils", "loadDF", sqlContext, source, options)
+  }
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   dataFrame(sdf)
 }
 
@@ -504,7 +521,7 @@ loadDF <- function(sqlContext, path = NULL, source = NULL, schema = NULL, ...) {
 createExternalTable <- function(sqlContext, tableName, path = NULL, source = NULL, ...) {
   options <- varargsToEnv(...)
   if (!is.null(path)) {
-    options[['path']] <- path
+    options[["path"]] <- path
   }
   sdf <- callJMethod(sqlContext, "createExternalTable", tableName, source, options)
   dataFrame(sdf)

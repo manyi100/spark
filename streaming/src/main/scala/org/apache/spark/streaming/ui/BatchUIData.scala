@@ -19,14 +19,18 @@
 package org.apache.spark.streaming.ui
 
 import org.apache.spark.streaming.Time
-import org.apache.spark.streaming.scheduler.BatchInfo
+import org.apache.spark.streaming.scheduler.{BatchInfo, StreamInputInfo}
 import org.apache.spark.streaming.ui.StreamingJobProgressListener._
 
 private[ui] case class OutputOpIdAndSparkJobId(outputOpId: OutputOpId, sparkJobId: SparkJobId)
 
 private[ui] case class BatchUIData(
     val batchTime: Time,
+<<<<<<< HEAD
     val streamIdToNumRecords: Map[Int, Long],
+=======
+    val streamIdToInputInfo: Map[Int, StreamInputInfo],
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     val submissionTime: Long,
     val processingStartTime: Option[Long],
     val processingEndTime: Option[Long],
@@ -58,7 +62,11 @@ private[ui] case class BatchUIData(
   /**
    * The number of recorders received by the receivers in this batch.
    */
+<<<<<<< HEAD
   def numRecords: Long = streamIdToNumRecords.values.sum
+=======
+  def numRecords: Long = streamIdToInputInfo.values.map(_.numRecords).sum
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }
 
 private[ui] object BatchUIData {
@@ -66,7 +74,7 @@ private[ui] object BatchUIData {
   def apply(batchInfo: BatchInfo): BatchUIData = {
     new BatchUIData(
       batchInfo.batchTime,
-      batchInfo.streamIdToNumRecords,
+      batchInfo.streamIdToInputInfo,
       batchInfo.submissionTime,
       batchInfo.processingStartTime,
       batchInfo.processingEndTime

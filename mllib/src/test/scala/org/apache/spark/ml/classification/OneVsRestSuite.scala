@@ -19,6 +19,10 @@ package org.apache.spark.ml.classification
 
 import org.apache.spark.SparkFunSuite
 import org.apache.spark.ml.attribute.NominalAttribute
+<<<<<<< HEAD
+=======
+import org.apache.spark.ml.feature.StringIndexer
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.ml.param.{ParamMap, ParamsSuite}
 import org.apache.spark.ml.util.MetadataUtils
 import org.apache.spark.mllib.classification.LogisticRegressionWithLBFGS
@@ -104,6 +108,32 @@ class OneVsRestSuite extends SparkFunSuite with MLlibTestSparkContext {
     ova.fit(datasetWithLabelMetadata)
   }
 
+<<<<<<< HEAD
+=======
+  test("SPARK-8092: ensure label features and prediction cols are configurable") {
+    val labelIndexer = new StringIndexer()
+      .setInputCol("label")
+      .setOutputCol("indexed")
+
+    val indexedDataset = labelIndexer
+      .fit(dataset)
+      .transform(dataset)
+      .drop("label")
+      .withColumnRenamed("features", "f")
+
+    val ova = new OneVsRest()
+    ova.setClassifier(new LogisticRegression())
+      .setLabelCol(labelIndexer.getOutputCol)
+      .setFeaturesCol("f")
+      .setPredictionCol("p")
+
+    val ovaModel = ova.fit(indexedDataset)
+    val transformedDataset = ovaModel.transform(indexedDataset)
+    val outputFields = transformedDataset.schema.fieldNames.toSet
+    assert(outputFields.contains("p"))
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   test("SPARK-8049: OneVsRest shouldn't output temp columns") {
     val logReg = new LogisticRegression()
       .setMaxIter(1)
@@ -127,7 +157,11 @@ class OneVsRestSuite extends SparkFunSuite with MLlibTestSparkContext {
     require(ovr1.getClassifier.getOrDefault(lr.maxIter) === 10,
       "copy should handle extra classifier params")
 
+<<<<<<< HEAD
     val ovrModel = ovr1.fit(dataset).copy(ParamMap(lr.threshold -> 0.1))
+=======
+    val ovrModel = ovr1.fit(dataset).copy(ParamMap(lr.thresholds -> Array(0.9, 0.1)))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     ovrModel.models.foreach { case m: LogisticRegressionModel =>
       require(m.getThreshold === 0.1, "copy should handle extra model params")
     }

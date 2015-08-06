@@ -26,7 +26,11 @@ class CoarseGrainedSchedulerBackendSuite extends SparkFunSuite with LocalSparkCo
     val conf = new SparkConf
     conf.set("spark.akka.frameSize", "1")
     conf.set("spark.default.parallelism", "1")
+<<<<<<< HEAD
     sc = new SparkContext("local-cluster[2 , 1 , 512]", "test", conf)
+=======
+    sc = new SparkContext("local-cluster[2, 1, 1024]", "test", conf)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     val frameSize = AkkaUtils.maxFrameSizeBytes(sc.conf)
     val buffer = new SerializableBuffer(java.nio.ByteBuffer.allocate(2 * frameSize))
     val larger = sc.parallelize(Seq(buffer))

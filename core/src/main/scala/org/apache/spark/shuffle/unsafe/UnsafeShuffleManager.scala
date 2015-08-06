@@ -56,9 +56,12 @@ private[spark] object UnsafeShuffleManager extends Logging {
     } else if (dependency.aggregator.isDefined) {
       log.debug(s"Can't use UnsafeShuffle for shuffle $shufId because an aggregator is defined")
       false
+<<<<<<< HEAD
     } else if (dependency.keyOrdering.isDefined) {
       log.debug(s"Can't use UnsafeShuffle for shuffle $shufId because a key ordering is defined")
       false
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     } else if (dependency.partitioner.numPartitions > MAX_SHUFFLE_OUTPUT_PARTITIONS) {
       log.debug(s"Can't use UnsafeShuffle for shuffle $shufId because it has more than " +
         s"$MAX_SHUFFLE_OUTPUT_PARTITIONS partitions")

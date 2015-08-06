@@ -17,11 +17,20 @@
 
 package org.apache.spark.sql.json
 
+<<<<<<< HEAD
+=======
+import org.apache.spark.sql.catalyst.InternalRow
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import scala.collection.Map
 
 import com.fasterxml.jackson.core._
 
+<<<<<<< HEAD
 import org.apache.spark.sql.catalyst.expressions._
+=======
+import org.apache.spark.sql.Row
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.sql.types._
 
 private[sql] object JacksonGenerator {
@@ -74,4 +83,63 @@ private[sql] object JacksonGenerator {
 
     valWriter(rowSchema, row)
   }
+<<<<<<< HEAD
+=======
+
+  /** Transforms a single InternalRow to JSON using Jackson
+   *
+   * TODO: make the code shared with the other apply method.
+   *
+   * @param rowSchema the schema object used for conversion
+   * @param gen a JsonGenerator object
+   * @param row The row to convert
+   */
+  def apply(rowSchema: StructType, gen: JsonGenerator, row: InternalRow): Unit = {
+    def valWriter: (DataType, Any) => Unit = {
+      case (_, null) | (NullType, _) => gen.writeNull()
+      case (StringType, v) => gen.writeString(v.toString)
+      case (TimestampType, v: java.sql.Timestamp) => gen.writeString(v.toString)
+      case (IntegerType, v: Int) => gen.writeNumber(v)
+      case (ShortType, v: Short) => gen.writeNumber(v)
+      case (FloatType, v: Float) => gen.writeNumber(v)
+      case (DoubleType, v: Double) => gen.writeNumber(v)
+      case (LongType, v: Long) => gen.writeNumber(v)
+      case (DecimalType(), v: java.math.BigDecimal) => gen.writeNumber(v)
+      case (ByteType, v: Byte) => gen.writeNumber(v.toInt)
+      case (BinaryType, v: Array[Byte]) => gen.writeBinary(v)
+      case (BooleanType, v: Boolean) => gen.writeBoolean(v)
+      case (DateType, v) => gen.writeString(v.toString)
+      case (udt: UserDefinedType[_], v) => valWriter(udt.sqlType, udt.serialize(v))
+
+      case (ArrayType(ty, _), v: ArrayData) =>
+        gen.writeStartArray()
+        v.foreach(ty, (_, value) => valWriter(ty, value))
+        gen.writeEndArray()
+
+      case (MapType(kv, vv, _), v: Map[_, _]) =>
+        gen.writeStartObject()
+        v.foreach { p =>
+          gen.writeFieldName(p._1.toString)
+          valWriter(vv, p._2)
+        }
+        gen.writeEndObject()
+
+      case (StructType(ty), v: InternalRow) =>
+        gen.writeStartObject()
+        var i = 0
+        while (i < ty.length) {
+          val field = ty(i)
+          val value = v.get(i, field.dataType)
+          if (value != null) {
+            gen.writeFieldName(field.name)
+            valWriter(field.dataType, value)
+          }
+          i += 1
+        }
+        gen.writeEndObject()
+    }
+
+    valWriter(rowSchema, row)
+  }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }

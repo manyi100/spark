@@ -22,6 +22,7 @@ import java.io.File
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
+<<<<<<< HEAD
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.hive.test.TestHive
 import org.apache.spark.sql.test.SQLTestUtils
@@ -32,6 +33,17 @@ private[sql] trait OrcTest extends SQLTestUtils {
 
   import sqlContext.sparkContext
   import sqlContext.implicits._
+=======
+import org.apache.spark.SparkFunSuite
+import org.apache.spark.sql._
+import org.apache.spark.sql.test.SQLTestUtils
+
+private[sql] trait OrcTest extends SQLTestUtils { this: SparkFunSuite =>
+  lazy val sqlContext = org.apache.spark.sql.hive.test.TestHive
+
+  import sqlContext.implicits._
+  import sqlContext.sparkContext
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   /**
    * Writes `data` to a Orc file, which is then passed to `f` and will be deleted after `f`
@@ -41,7 +53,11 @@ private[sql] trait OrcTest extends SQLTestUtils {
       (data: Seq[T])
       (f: String => Unit): Unit = {
     withTempPath { file =>
+<<<<<<< HEAD
       sparkContext.parallelize(data).toDF().write.format("orc").save(file.getCanonicalPath)
+=======
+      sparkContext.parallelize(data).toDF().write.orc(file.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       f(file.getCanonicalPath)
     }
   }
@@ -53,7 +69,11 @@ private[sql] trait OrcTest extends SQLTestUtils {
   protected def withOrcDataFrame[T <: Product: ClassTag: TypeTag]
       (data: Seq[T])
       (f: DataFrame => Unit): Unit = {
+<<<<<<< HEAD
     withOrcFile(data)(path => f(hiveContext.read.format("orc").load(path)))
+=======
+    withOrcFile(data)(path => f(sqlContext.read.orc(path)))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   /**
@@ -65,18 +85,30 @@ private[sql] trait OrcTest extends SQLTestUtils {
       (data: Seq[T], tableName: String)
       (f: => Unit): Unit = {
     withOrcDataFrame(data) { df =>
+<<<<<<< HEAD
       hiveContext.registerDataFrameAsTable(df, tableName)
+=======
+      sqlContext.registerDataFrameAsTable(df, tableName)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       withTempTable(tableName)(f)
     }
   }
 
   protected def makeOrcFile[T <: Product: ClassTag: TypeTag](
       data: Seq[T], path: File): Unit = {
+<<<<<<< HEAD
     data.toDF().write.format("orc").mode(SaveMode.Overwrite).save(path.getCanonicalPath)
+=======
+    data.toDF().write.mode(SaveMode.Overwrite).orc(path.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   protected def makeOrcFile[T <: Product: ClassTag: TypeTag](
       df: DataFrame, path: File): Unit = {
+<<<<<<< HEAD
     df.write.format("orc").mode(SaveMode.Overwrite).save(path.getCanonicalPath)
+=======
+    df.write.mode(SaveMode.Overwrite).orc(path.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 }

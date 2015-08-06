@@ -122,9 +122,13 @@ abstract class Predictor[
    */
   protected def extractLabeledPoints(dataset: DataFrame): RDD[LabeledPoint] = {
     dataset.select($(labelCol), $(featuresCol))
+<<<<<<< HEAD:mllib/src/main/scala/org/apache/spark/ml/Predictor.scala
       .map { case Row(label: Double, features: Vector) =>
       LabeledPoint(label, features)
     }
+=======
+      .map { case Row(label: Double, features: Vector) => LabeledPoint(label, features) }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c:mllib/src/main/scala/org/apache/spark/ml/Predictor.scala
   }
 }
 
@@ -171,12 +175,23 @@ abstract class PredictionModel[FeaturesType, M <: PredictionModel[FeaturesType, 
   override def transform(dataset: DataFrame): DataFrame = {
     transformSchema(dataset.schema, logging = true)
     if ($(predictionCol).nonEmpty) {
+<<<<<<< HEAD:mllib/src/main/scala/org/apache/spark/ml/Predictor.scala
       dataset.withColumn($(predictionCol), callUDF(predict _, DoubleType, col($(featuresCol))))
+=======
+      transformImpl(dataset)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c:mllib/src/main/scala/org/apache/spark/ml/Predictor.scala
     } else {
       this.logWarning(s"$uid: Predictor.transform() was called as NOOP" +
         " since no output columns were set.")
       dataset
     }
+  }
+
+  protected def transformImpl(dataset: DataFrame): DataFrame = {
+    val predictUDF = udf { (features: Any) =>
+      predict(features.asInstanceOf[FeaturesType])
+    }
+    dataset.withColumn($(predictionCol), predictUDF(col($(featuresCol))))
   }
 
   /**

@@ -20,7 +20,11 @@
   <parent>
     <groupId>org.apache.spark</groupId>
     <artifactId>spark-parent_2.10</artifactId>
+<<<<<<< HEAD
     <version>1.4.2-SNAPSHOT</version>
+=======
+    <version>1.5.0-SNAPSHOT</version>
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -66,7 +70,7 @@
     </dependency>
     <dependency>
       <groupId>org.mockito</groupId>
-      <artifactId>mockito-all</artifactId>
+      <artifactId>mockito-core</artifactId>
       <scope>test</scope>
     </dependency>
     <dependency>

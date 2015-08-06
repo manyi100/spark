@@ -55,9 +55,15 @@ public class JavaHashingTFSuite {
   @Test
   public void hashingTF() {
     JavaRDD<Row> jrdd = jsc.parallelize(Lists.newArrayList(
+<<<<<<< HEAD
       RowFactory.create(0, "Hi I heard about Spark"),
       RowFactory.create(0, "I wish Java could use case classes"),
       RowFactory.create(1, "Logistic regression models are neat")
+=======
+      RowFactory.create(0.0, "Hi I heard about Spark"),
+      RowFactory.create(0.0, "I wish Java could use case classes"),
+      RowFactory.create(1.0, "Logistic regression models are neat")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     ));
     StructType schema = new StructType(new StructField[]{
       new StructField("label", DataTypes.DoubleType, false, Metadata.empty()),

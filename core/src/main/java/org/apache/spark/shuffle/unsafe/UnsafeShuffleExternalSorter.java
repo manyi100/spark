@@ -20,6 +20,10 @@ package org.apache.spark.shuffle.unsafe;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
+<<<<<<< HEAD
+=======
+import javax.annotation.Nullable;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 import scala.Tuple2;
 
@@ -30,6 +34,10 @@ import org.slf4j.LoggerFactory;
 import org.apache.spark.SparkConf;
 import org.apache.spark.TaskContext;
 import org.apache.spark.executor.ShuffleWriteMetrics;
+<<<<<<< HEAD
+=======
+import org.apache.spark.serializer.DummySerializerInstance;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 import org.apache.spark.serializer.SerializerInstance;
 import org.apache.spark.shuffle.ShuffleMemoryManager;
 import org.apache.spark.storage.*;
@@ -58,6 +66,7 @@ final class UnsafeShuffleExternalSorter {
 
   private final Logger logger = LoggerFactory.getLogger(UnsafeShuffleExternalSorter.class);
 
+<<<<<<< HEAD
   private static final int PAGE_SIZE = PackedRecordPointer.MAXIMUM_PAGE_SIZE_BYTES;
   @VisibleForTesting
   static final int DISK_WRITE_BUFFER_SIZE = 1024 * 1024;
@@ -66,6 +75,16 @@ final class UnsafeShuffleExternalSorter {
 
   private final int initialSize;
   private final int numPartitions;
+=======
+  @VisibleForTesting
+  static final int DISK_WRITE_BUFFER_SIZE = 1024 * 1024;
+
+  private final int initialSize;
+  private final int numPartitions;
+  private final int pageSizeBytes;
+  @VisibleForTesting
+  final int maxRecordSizeBytes;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   private final TaskMemoryManager memoryManager;
   private final ShuffleMemoryManager shuffleMemoryManager;
   private final BlockManager blockManager;
@@ -85,9 +104,18 @@ final class UnsafeShuffleExternalSorter {
 
   private final LinkedList<SpillInfo> spills = new LinkedList<SpillInfo>();
 
+<<<<<<< HEAD
   // These variables are reset after spilling:
   private UnsafeShuffleInMemorySorter sorter;
   private MemoryBlock currentPage = null;
+=======
+  /** Peak memory used by this sorter so far, in bytes. **/
+  private long peakMemoryUsedBytes;
+
+  // These variables are reset after spilling:
+  @Nullable private UnsafeShuffleInMemorySorter sorter;
+  @Nullable private MemoryBlock currentPage = null;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   private long currentPagePosition = -1;
   private long freeSpaceInCurrentPage = 0;
 
@@ -105,10 +133,21 @@ final class UnsafeShuffleExternalSorter {
     this.blockManager = blockManager;
     this.taskContext = taskContext;
     this.initialSize = initialSize;
+<<<<<<< HEAD
     this.numPartitions = numPartitions;
     // Use getSizeAsKb (not bytes) to maintain backwards compatibility if no units are provided
     this.fileBufferSizeBytes = (int) conf.getSizeAsKb("spark.shuffle.file.buffer", "32k") * 1024;
 
+=======
+    this.peakMemoryUsedBytes = initialSize;
+    this.numPartitions = numPartitions;
+    // Use getSizeAsKb (not bytes) to maintain backwards compatibility if no units are provided
+    this.fileBufferSizeBytes = (int) conf.getSizeAsKb("spark.shuffle.file.buffer", "32k") * 1024;
+    this.pageSizeBytes = (int) Math.min(
+      PackedRecordPointer.MAXIMUM_PAGE_SIZE_BYTES,
+      conf.getSizeAsBytes("spark.buffer.pageSize", "64m"));
+    this.maxRecordSizeBytes = pageSizeBytes - 4;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     this.writeMetrics = writeMetrics;
     initializeForWriting();
   }
@@ -156,7 +195,11 @@ final class UnsafeShuffleExternalSorter {
 
     // Currently, we need to open a new DiskBlockObjectWriter for each partition; we can avoid this
     // after SPARK-5581 is fixed.
+<<<<<<< HEAD
     BlockObjectWriter writer;
+=======
+    DiskBlockObjectWriter writer;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
     // Small writes to DiskBlockObjectWriter will be fairly inefficient. Since there doesn't seem to
     // be an API to directly transfer bytes from managed memory to the disk writer, we buffer
@@ -271,10 +314,37 @@ final class UnsafeShuffleExternalSorter {
   }
 
   private long getMemoryUsage() {
+<<<<<<< HEAD
     return sorter.getMemoryUsage() + (allocatedPages.size() * (long) PAGE_SIZE);
   }
 
   private long freeMemory() {
+=======
+    long totalPageSize = 0;
+    for (MemoryBlock page : allocatedPages) {
+      totalPageSize += page.size();
+    }
+    return ((sorter == null) ? 0 : sorter.getMemoryUsage()) + totalPageSize;
+  }
+
+  private void updatePeakMemoryUsed() {
+    long mem = getMemoryUsage();
+    if (mem > peakMemoryUsedBytes) {
+      peakMemoryUsedBytes = mem;
+    }
+  }
+
+  /**
+   * Return the peak memory used so far, in bytes.
+   */
+  long getPeakMemoryUsedBytes() {
+    updatePeakMemoryUsed();
+    return peakMemoryUsedBytes;
+  }
+
+  private long freeMemory() {
+    updatePeakMemoryUsed();
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     long memoryFreed = 0;
     for (MemoryBlock block : allocatedPages) {
       memoryManager.freePage(block);
@@ -345,6 +415,7 @@ final class UnsafeShuffleExternalSorter {
       // TODO: we should track metrics on the amount of space wasted when we roll over to a new page
       // without using the free space at the end of the current page. We should also do this for
       // BytesToBytesMap.
+<<<<<<< HEAD
       if (requiredSpace > PAGE_SIZE) {
         throw new IOException("Required space " + requiredSpace + " is greater than page size (" +
           PAGE_SIZE + ")");
@@ -362,6 +433,25 @@ final class UnsafeShuffleExternalSorter {
         currentPage = memoryManager.allocatePage(PAGE_SIZE);
         currentPagePosition = currentPage.getBaseOffset();
         freeSpaceInCurrentPage = PAGE_SIZE;
+=======
+      if (requiredSpace > pageSizeBytes) {
+        throw new IOException("Required space " + requiredSpace + " is greater than page size (" +
+          pageSizeBytes + ")");
+      } else {
+        final long memoryAcquired = shuffleMemoryManager.tryToAcquire(pageSizeBytes);
+        if (memoryAcquired < pageSizeBytes) {
+          shuffleMemoryManager.release(memoryAcquired);
+          spill();
+          final long memoryAcquiredAfterSpilling = shuffleMemoryManager.tryToAcquire(pageSizeBytes);
+          if (memoryAcquiredAfterSpilling != pageSizeBytes) {
+            shuffleMemoryManager.release(memoryAcquiredAfterSpilling);
+            throw new IOException("Unable to acquire " + pageSizeBytes + " bytes of memory");
+          }
+        }
+        currentPage = memoryManager.allocatePage(pageSizeBytes);
+        currentPagePosition = currentPage.getBaseOffset();
+        freeSpaceInCurrentPage = pageSizeBytes;
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         allocatedPages.add(currentPage);
       }
     }

@@ -17,22 +17,14 @@
 
 package org.apache.spark.sql.hive
 
-import scala.collection.JavaConversions._
-
-import org.apache.spark.annotation.Experimental
 import org.apache.spark.sql._
-import org.apache.spark.sql.catalyst.CatalystTypeConverters
-import org.apache.spark.sql.catalyst.analysis.UnresolvedAttribute
-import org.apache.spark.sql.catalyst.expressions.codegen.GeneratePredicate
-import org.apache.spark.sql.catalyst.expressions.{Row, _}
+import org.apache.spark.sql.catalyst.expressions._
 import org.apache.spark.sql.catalyst.planning._
 import org.apache.spark.sql.catalyst.plans._
 import org.apache.spark.sql.catalyst.plans.logical.LogicalPlan
+import org.apache.spark.sql.execution.datasources.{CreateTableUsing, CreateTableUsingAsSelect, DescribeCommand}
 import org.apache.spark.sql.execution.{DescribeCommand => RunnableDescribeCommand, _}
 import org.apache.spark.sql.hive.execution._
-import org.apache.spark.sql.parquet.ParquetRelation
-import org.apache.spark.sql.sources.{CreateTableUsing, CreateTableUsingAsSelect, DescribeCommand}
-import org.apache.spark.sql.types.StringType
 
 
 private[hive] trait HiveStrategies {
@@ -41,6 +33,7 @@ private[hive] trait HiveStrategies {
 
   val hiveContext: HiveContext
 
+<<<<<<< HEAD
   /**
    * :: Experimental ::
    * Finds table scans that would use the Hive SerDe and replaces them with our own native parquet
@@ -171,6 +164,8 @@ private[hive] trait HiveStrategies {
     }
   }
 
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   object Scripts extends Strategy {
     def apply(plan: LogicalPlan): Seq[SparkPlan] = plan match {
       case logical.ScriptTransformation(input, script, output, child, schema: HiveScriptIOSchema) =>
@@ -212,7 +207,7 @@ private[hive] trait HiveStrategies {
           projectList,
           otherPredicates,
           identity[Seq[Expression]],
-          HiveTableScan(_, relation, pruningPredicates.reduceLeftOption(And))(hiveContext)) :: Nil
+          HiveTableScan(_, relation, pruningPredicates)(hiveContext)) :: Nil
       case _ =>
         Nil
     }

@@ -17,65 +17,23 @@
 
 package org.apache.spark.sql.parquet
 
-import java.sql.Timestamp
-import java.util.{TimeZone, Calendar}
+import org.apache.spark.sql.catalyst.InternalRow
+import org.apache.spark.sql.types.{MapData, ArrayData}
 
-import scala.collection.mutable.{Buffer, ArrayBuffer, HashMap}
-
-import jodd.datetime.JDateTime
-import parquet.column.Dictionary
-import parquet.io.api.{PrimitiveConverter, GroupConverter, Binary, Converter}
-import parquet.schema.MessageType
-
-import org.apache.spark.sql.catalyst.expressions._
-import org.apache.spark.sql.parquet.CatalystConverter.FieldType
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.parquet.timestamp.NanoTime
-
-/**
- * Collection of converters of Parquet types (group and primitive types) that
- * model arrays and maps. The conversions are partly based on the AvroParquet
- * converters that are part of Parquet in order to be able to process these
- * types.
- *
- * There are several types of converters:
- * <ul>
- *   <li>[[org.apache.spark.sql.parquet.CatalystPrimitiveConverter]] for primitive
- *   (numeric, boolean and String) types</li>
- *   <li>[[org.apache.spark.sql.parquet.CatalystNativeArrayConverter]] for arrays
- *   of native JVM element types; note: currently null values are not supported!</li>
- *   <li>[[org.apache.spark.sql.parquet.CatalystArrayConverter]] for arrays of
- *   arbitrary element types (including nested element types); note: currently
- *   null values are not supported!</li>
- *   <li>[[org.apache.spark.sql.parquet.CatalystStructConverter]] for structs</li>
- *   <li>[[org.apache.spark.sql.parquet.CatalystMapConverter]] for maps; note:
- *   currently null values are not supported!</li>
- *   <li>[[org.apache.spark.sql.parquet.CatalystPrimitiveRowConverter]] for rows
- *   of only primitive element types</li>
- *   <li>[[org.apache.spark.sql.parquet.CatalystGroupConverter]] for other nested
- *   records, including the top-level row record</li>
- * </ul>
- */
-
+// TODO Removes this while fixing SPARK-8848
 private[sql] object CatalystConverter {
-  // The type internally used for fields
-  type FieldType = StructField
-
   // This is mostly Parquet convention (see, e.g., `ConversionPatterns`).
   // Note that "array" for the array elements is chosen by ParquetAvro.
   // Using a different value will result in Parquet silently dropping columns.
   val ARRAY_CONTAINS_NULL_BAG_SCHEMA_NAME = "bag"
   val ARRAY_ELEMENTS_SCHEMA_NAME = "array"
-  // SPARK-4520: Thrift generated parquet files have different array element
-  // schema names than avro. Thrift parquet uses array_schema_name + "_tuple"
-  // as opposed to "array" used by default. For more information, check
-  // TestThriftSchemaConverter.java in parquet.thrift.
-  val THRIFT_ARRAY_ELEMENTS_SCHEMA_NAME_SUFFIX = "_tuple"
+
   val MAP_KEY_SCHEMA_NAME = "key"
   val MAP_VALUE_SCHEMA_NAME = "value"
   val MAP_SCHEMA_NAME = "map"
 
   // TODO: consider using Array[T] for arrays to avoid boxing of primitive types
+<<<<<<< HEAD
   type ArrayScalaType[T] = Seq[T]
   type StructScalaType[T] = Row
   type MapScalaType[K, V] = Map[K, V]
@@ -924,4 +882,9 @@ private[parquet] class CatalystMapConverter(
 
   override protected[parquet] def updateField(fieldIndex: Int, value: Any): Unit =
     throw new UnsupportedOperationException
+=======
+  type ArrayScalaType = ArrayData
+  type StructScalaType = InternalRow
+  type MapScalaType = MapData
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }

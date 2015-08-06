@@ -21,6 +21,7 @@ import java.math.BigDecimal
 import java.sql.DriverManager
 import java.util.{Calendar, GregorianCalendar, Properties}
 
+<<<<<<< HEAD
 import org.apache.spark.SparkFunSuite
 import org.apache.spark.sql.test._
 import org.apache.spark.sql.types._
@@ -28,6 +29,14 @@ import org.h2.jdbc.JdbcSQLException
 import org.scalatest.BeforeAndAfter
 import TestSQLContext._
 import TestSQLContext.implicits._
+=======
+import org.h2.jdbc.JdbcSQLException
+import org.scalatest.BeforeAndAfter
+
+import org.apache.spark.SparkFunSuite
+import org.apache.spark.sql.types._
+import org.apache.spark.util.Utils
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
   val url = "jdbc:h2:mem:testdb0"
@@ -37,14 +46,25 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
   val testBytes = Array[Byte](99.toByte, 134.toByte, 135.toByte, 200.toByte, 205.toByte)
 
   val testH2Dialect = new JdbcDialect {
+<<<<<<< HEAD
     def canHandle(url: String) : Boolean = url.startsWith("jdbc:h2")
+=======
+    override def canHandle(url: String) : Boolean = url.startsWith("jdbc:h2")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     override def getCatalystType(
         sqlType: Int, typeName: String, size: Int, md: MetadataBuilder): Option[DataType] =
       Some(StringType)
   }
 
+<<<<<<< HEAD
+=======
+  private lazy val ctx = org.apache.spark.sql.test.TestSQLContext
+  import ctx.implicits._
+  import ctx.sql
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   before {
-    Class.forName("org.h2.Driver")
+    Utils.classForName("org.h2.Driver")
     // Extra properties that will be specified for our database. We need these to test
     // usage of parameters from OPTIONS clause in queries.
     val properties = new Properties()
@@ -131,7 +151,7 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
       """.stripMargin.replaceAll("\n", " "))
 
 
-    conn.prepareStatement("create table test.flttypes (a DOUBLE, b REAL, c DECIMAL(40, 20))"
+    conn.prepareStatement("create table test.flttypes (a DOUBLE, b REAL, c DECIMAL(38, 18))"
         ).executeUpdate()
     conn.prepareStatement("insert into test.flttypes values ("
       + "1.0000000000000002220446049250313080847263336181640625, "
@@ -149,7 +169,11 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
       s"""
         |create table test.nulltypes (a INT, b BOOLEAN, c TINYINT, d BINARY(20), e VARCHAR(20),
         |f VARCHAR_IGNORECASE(20), g CHAR(20), h BLOB, i CLOB, j TIME, k DATE, l TIMESTAMP,
+<<<<<<< HEAD
         |m DOUBLE, n REAL, o DECIMAL(40, 20))
+=======
+        |m DOUBLE, n REAL, o DECIMAL(38, 18))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       """.stripMargin.replaceAll("\n", " ")).executeUpdate()
     conn.prepareStatement("insert into test.nulltypes values ("
       + "null, null, null, null, null, null, null, null, null, "
@@ -253,26 +277,42 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
   }
 
   test("Basic API") {
+<<<<<<< HEAD
     assert(TestSQLContext.read.jdbc(
+=======
+    assert(ctx.read.jdbc(
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       urlWithUserAndPass, "TEST.PEOPLE", new Properties).collect().length === 3)
   }
 
   test("Basic API with FetchSize") {
     val properties = new Properties
     properties.setProperty("fetchSize", "2")
+<<<<<<< HEAD
     assert(TestSQLContext.read.jdbc(
+=======
+    assert(ctx.read.jdbc(
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       urlWithUserAndPass, "TEST.PEOPLE", properties).collect().length === 3)
   }
 
   test("Partitioning via JDBCPartitioningInfo API") {
     assert(
+<<<<<<< HEAD
       TestSQLContext.read.jdbc(urlWithUserAndPass, "TEST.PEOPLE", "THEID", 0, 4, 3, new Properties)
+=======
+      ctx.read.jdbc(urlWithUserAndPass, "TEST.PEOPLE", "THEID", 0, 4, 3, new Properties)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       .collect().length === 3)
   }
 
   test("Partitioning via list-of-where-clauses API") {
     val parts = Array[String]("THEID < 2", "THEID >= 2")
+<<<<<<< HEAD
     assert(TestSQLContext.read.jdbc(urlWithUserAndPass, "TEST.PEOPLE", parts, new Properties)
+=======
+    assert(ctx.read.jdbc(urlWithUserAndPass, "TEST.PEOPLE", parts, new Properties)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       .collect().length === 3)
   }
 
@@ -324,13 +364,19 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
     assert(cal.get(Calendar.HOUR) === 11)
     assert(cal.get(Calendar.MINUTE) === 22)
     assert(cal.get(Calendar.SECOND) === 33)
-    assert(rows(0).getAs[java.sql.Timestamp](2).getNanos === 543543543)
+    assert(rows(0).getAs[java.sql.Timestamp](2).getNanos === 543543000)
   }
 
   test("test DATE types") {
+<<<<<<< HEAD
     val rows = TestSQLContext.read.jdbc(
       urlWithUserAndPass, "TEST.TIMETYPES", new Properties).collect()
     val cachedRows = TestSQLContext.read.jdbc(urlWithUserAndPass, "TEST.TIMETYPES", new Properties)
+=======
+    val rows = ctx.read.jdbc(
+      urlWithUserAndPass, "TEST.TIMETYPES", new Properties).collect()
+    val cachedRows = ctx.read.jdbc(urlWithUserAndPass, "TEST.TIMETYPES", new Properties)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       .cache().collect()
     assert(rows(0).getAs[java.sql.Date](1) === java.sql.Date.valueOf("1996-01-01"))
     assert(rows(1).getAs[java.sql.Date](1) === null)
@@ -338,9 +384,14 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
   }
 
   test("test DATE types in cache") {
+<<<<<<< HEAD
     val rows =
       TestSQLContext.read.jdbc(urlWithUserAndPass, "TEST.TIMETYPES", new Properties).collect()
     TestSQLContext.read.jdbc(urlWithUserAndPass, "TEST.TIMETYPES", new Properties)
+=======
+    val rows = ctx.read.jdbc(urlWithUserAndPass, "TEST.TIMETYPES", new Properties).collect()
+    ctx.read.jdbc(urlWithUserAndPass, "TEST.TIMETYPES", new Properties)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       .cache().registerTempTable("mycached_date")
     val cachedRows = sql("select * from mycached_date").collect()
     assert(rows(0).getAs[java.sql.Date](1) === java.sql.Date.valueOf("1996-01-01"))
@@ -348,13 +399,18 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
   }
 
   test("test types for null value") {
+<<<<<<< HEAD
     val rows = TestSQLContext.read.jdbc(
+=======
+    val rows = ctx.read.jdbc(
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       urlWithUserAndPass, "TEST.NULLTYPES", new Properties).collect()
     assert((0 to 14).forall(i => rows(0).isNullAt(i)))
   }
 
   test("H2 floating-point types") {
     val rows = sql("SELECT * FROM flttypes").collect()
+<<<<<<< HEAD
     assert(rows(0).getDouble(0) === 1.00000000000000022) // Yes, I meant ==.
     assert(rows(0).getDouble(1) === 1.00000011920928955) // Yes, I meant ==.
     assert(rows(0).getAs[BigDecimal](2)
@@ -363,6 +419,16 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
     val compareDecimal = sql("SELECT C FROM flttypes where C > C - 1").collect()
     assert(compareDecimal(0).getAs[BigDecimal](0)
       .equals(new BigDecimal("123456789012345.54321543215432100000")))
+=======
+    assert(rows(0).getDouble(0) === 1.00000000000000022)
+    assert(rows(0).getDouble(1) === 1.00000011920928955)
+    assert(rows(0).getAs[BigDecimal](2) ===
+      new BigDecimal("123456789012345.543215432154321000"))
+    assert(rows(0).schema.fields(2).dataType === DecimalType(38, 18))
+    val result = sql("SELECT C FROM flttypes where C > C - 1").collect()
+    assert(result(0).getAs[BigDecimal](0) ===
+      new BigDecimal("123456789012345.543215432154321000"))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   test("SQL query as table name") {
@@ -395,10 +461,15 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
 
   test("Remap types via JdbcDialects") {
     JdbcDialects.registerDialect(testH2Dialect)
+<<<<<<< HEAD
     val df = TestSQLContext.read.jdbc(urlWithUserAndPass, "TEST.PEOPLE", new Properties)
     assert(df.schema.filter(
       _.dataType != org.apache.spark.sql.types.StringType
     ).isEmpty)
+=======
+    val df = ctx.read.jdbc(urlWithUserAndPass, "TEST.PEOPLE", new Properties)
+    assert(df.schema.filter(_.dataType != org.apache.spark.sql.types.StringType).isEmpty)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     val rows = df.collect()
     assert(rows(0).get(0).isInstanceOf[String])
     assert(rows(0).get(1).isInstanceOf[String])
@@ -430,7 +501,11 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
 
   test("Aggregated dialects") {
     val agg = new AggregatedDialect(List(new JdbcDialect {
+<<<<<<< HEAD
       def canHandle(url: String) : Boolean = url.startsWith("jdbc:h2:")
+=======
+      override def canHandle(url: String) : Boolean = url.startsWith("jdbc:h2:")
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       override def getCatalystType(
           sqlType: Int, typeName: String, size: Int, md: MetadataBuilder): Option[DataType] =
         if (sqlType % 2 == 0) {
@@ -441,8 +516,13 @@ class JDBCSuite extends SparkFunSuite with BeforeAndAfter {
     }, testH2Dialect))
     assert(agg.canHandle("jdbc:h2:xxx"))
     assert(!agg.canHandle("jdbc:h2"))
+<<<<<<< HEAD
     assert(agg.getCatalystType(0, "", 1, null) == Some(LongType))
     assert(agg.getCatalystType(1, "", 1, null) == Some(StringType))
+=======
+    assert(agg.getCatalystType(0, "", 1, null) === Some(LongType))
+    assert(agg.getCatalystType(1, "", 1, null) === Some(StringType))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
 }

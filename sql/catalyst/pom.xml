@@ -22,7 +22,11 @@
   <parent>
     <groupId>org.apache.spark</groupId>
     <artifactId>spark-parent_2.10</artifactId>
+<<<<<<< HEAD
     <version>1.4.2-SNAPSHOT</version>
+=======
+    <version>1.5.0-SNAPSHOT</version>
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     <relativePath>../../pom.xml</relativePath>
   </parent>
 
@@ -36,10 +40,6 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>org.scala-lang</groupId>
-      <artifactId>scala-compiler</artifactId>
-    </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-reflect</artifactId>
@@ -66,6 +66,10 @@
       <groupId>org.scalacheck</groupId>
       <artifactId>scalacheck_${scala.binary.version}</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.codehaus.janino</groupId>
+      <artifactId>janino</artifactId>
     </dependency>
   </dependencies>
   <build>
@@ -108,13 +112,6 @@
       <activation>
         <property><name>!scala-2.11</name></property>
       </activation>
-      <dependencies>
-        <dependency>
-          <groupId>org.scalamacros</groupId>
-          <artifactId>quasiquotes_${scala.binary.version}</artifactId>
-          <version>${scala.macros.version}</version>
-        </dependency>
-      </dependencies>
     </profile>
   </profiles>
 </project>

@@ -111,7 +111,11 @@ public class UnsafeShuffleWriterSuite {
     mergedOutputFile = File.createTempFile("mergedoutput", "", tempDir);
     partitionSizesInMergedFile = null;
     spillFilesCreated.clear();
+<<<<<<< HEAD
     conf = new SparkConf();
+=======
+    conf = new SparkConf().set("spark.buffer.pageSize", "128m");
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     taskMetrics = new TaskMetrics();
 
     when(shuffleMemoryManager.tryToAcquire(anyLong())).then(returnsFirstArg());
@@ -190,6 +194,10 @@ public class UnsafeShuffleWriterSuite {
       });
 
     when(taskContext.taskMetrics()).thenReturn(taskMetrics);
+<<<<<<< HEAD
+=======
+    when(taskContext.internalMetricsToAccumulators()).thenReturn(null);
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
     when(shuffleDep.serializer()).thenReturn(Option.<Serializer>apply(serializer));
     when(shuffleDep.partitioner()).thenReturn(hashPartitioner);
@@ -253,6 +261,26 @@ public class UnsafeShuffleWriterSuite {
     createWriter(false).stop(false);
   }
 
+<<<<<<< HEAD
+=======
+  class PandaException extends RuntimeException {
+  }
+
+  @Test(expected=PandaException.class)
+  public void writeFailurePropagates() throws Exception {
+    class BadRecords extends scala.collection.AbstractIterator<Product2<Object, Object>> {
+      @Override public boolean hasNext() {
+        throw new PandaException();
+      }
+      @Override public Product2<Object, Object> next() {
+        return null;
+      }
+    }
+    final UnsafeShuffleWriter<Object, Object> writer = createWriter(true);
+    writer.write(new BadRecords());
+  }
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   @Test
   public void writeEmptyIterator() throws Exception {
     final UnsafeShuffleWriter<Object, Object> writer = createWriter(true);
@@ -495,12 +523,20 @@ public class UnsafeShuffleWriterSuite {
     writer.insertRecordIntoSorter(new Tuple2<Object, Object>(new byte[1], new byte[1]));
     writer.forceSorterToSpill();
     // We should be able to write a record that's right _at_ the max record size
+<<<<<<< HEAD
     final byte[] atMaxRecordSize = new byte[UnsafeShuffleExternalSorter.MAX_RECORD_SIZE];
+=======
+    final byte[] atMaxRecordSize = new byte[writer.maxRecordSizeBytes()];
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     new Random(42).nextBytes(atMaxRecordSize);
     writer.insertRecordIntoSorter(new Tuple2<Object, Object>(new byte[0], atMaxRecordSize));
     writer.forceSorterToSpill();
     // Inserting a record that's larger than the max record size should fail:
+<<<<<<< HEAD
     final byte[] exceedsMaxRecordSize = new byte[UnsafeShuffleExternalSorter.MAX_RECORD_SIZE + 1];
+=======
+    final byte[] exceedsMaxRecordSize = new byte[writer.maxRecordSizeBytes() + 1];
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     new Random(42).nextBytes(exceedsMaxRecordSize);
     Product2<Object, Object> hugeRecord =
       new Tuple2<Object, Object>(new byte[0], exceedsMaxRecordSize);
@@ -525,4 +561,60 @@ public class UnsafeShuffleWriterSuite {
     writer.stop(false);
     assertSpillFilesWereCleanedUp();
   }
+<<<<<<< HEAD
+=======
+
+  @Test
+  public void testPeakMemoryUsed() throws Exception {
+    final long recordLengthBytes = 8;
+    final long pageSizeBytes = 256;
+    final long numRecordsPerPage = pageSizeBytes / recordLengthBytes;
+    final SparkConf conf = new SparkConf().set("spark.buffer.pageSize", pageSizeBytes + "b");
+    final UnsafeShuffleWriter<Object, Object> writer =
+      new UnsafeShuffleWriter<Object, Object>(
+        blockManager,
+        shuffleBlockResolver,
+        taskMemoryManager,
+        shuffleMemoryManager,
+        new UnsafeShuffleHandle<Object, Object>(0, 1, shuffleDep),
+        0, // map id
+        taskContext,
+        conf);
+
+    // Peak memory should be monotonically increasing. More specifically, every time
+    // we allocate a new page it should increase by exactly the size of the page.
+    long previousPeakMemory = writer.getPeakMemoryUsedBytes();
+    long newPeakMemory;
+    try {
+      for (int i = 0; i < numRecordsPerPage * 10; i++) {
+        writer.insertRecordIntoSorter(new Tuple2<Object, Object>(1, 1));
+        newPeakMemory = writer.getPeakMemoryUsedBytes();
+        if (i % numRecordsPerPage == 0) {
+          // We allocated a new page for this record, so peak memory should change
+          assertEquals(previousPeakMemory + pageSizeBytes, newPeakMemory);
+        } else {
+          assertEquals(previousPeakMemory, newPeakMemory);
+        }
+        previousPeakMemory = newPeakMemory;
+      }
+
+      // Spilling should not change peak memory
+      writer.forceSorterToSpill();
+      newPeakMemory = writer.getPeakMemoryUsedBytes();
+      assertEquals(previousPeakMemory, newPeakMemory);
+      for (int i = 0; i < numRecordsPerPage; i++) {
+        writer.insertRecordIntoSorter(new Tuple2<Object, Object>(1, 1));
+      }
+      newPeakMemory = writer.getPeakMemoryUsedBytes();
+      assertEquals(previousPeakMemory, newPeakMemory);
+
+      // Closing the writer should not change peak memory
+      writer.closeAndWriteOutput();
+      newPeakMemory = writer.getPeakMemoryUsedBytes();
+      assertEquals(previousPeakMemory, newPeakMemory);
+    } finally {
+      writer.stop(false);
+    }
+  }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 }

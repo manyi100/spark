@@ -66,7 +66,10 @@ class OneHotEncoder(override val uid: String) extends Transformer
   def setOutputCol(value: String): this.type = set(outputCol, value)
 
   override def transformSchema(schema: StructType): StructType = {
+<<<<<<< HEAD
     val is = "_is_"
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     val inputColName = $(inputCol)
     val outputColName = $(outputCol)
 
@@ -79,17 +82,29 @@ class OneHotEncoder(override val uid: String) extends Transformer
     val outputAttrNames: Option[Array[String]] = inputAttr match {
       case nominal: NominalAttribute =>
         if (nominal.values.isDefined) {
+<<<<<<< HEAD
           nominal.values.map(_.map(v => inputColName + is + v))
         } else if (nominal.numValues.isDefined) {
           nominal.numValues.map(n => Array.tabulate(n)(i => inputColName + is + i))
+=======
+          nominal.values
+        } else if (nominal.numValues.isDefined) {
+          nominal.numValues.map(n => Array.tabulate(n)(_.toString))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         } else {
           None
         }
       case binary: BinaryAttribute =>
         if (binary.values.isDefined) {
+<<<<<<< HEAD
           binary.values.map(_.map(v => inputColName + is + v))
         } else {
           Some(Array.tabulate(2)(i => inputColName + is + i))
+=======
+          binary.values
+        } else {
+          Some(Array.tabulate(2)(_.toString))
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
         }
       case _: NumericAttribute =>
         throw new RuntimeException(
@@ -123,7 +138,10 @@ class OneHotEncoder(override val uid: String) extends Transformer
 
   override def transform(dataset: DataFrame): DataFrame = {
     // schema transformation
+<<<<<<< HEAD
     val is = "_is_"
+=======
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     val inputColName = $(inputCol)
     val outputColName = $(outputCol)
     val shouldDropLast = $(dropLast)
@@ -142,7 +160,11 @@ class OneHotEncoder(override val uid: String) extends Transformer
             math.max(m0, m1)
           }
         ).toInt + 1
+<<<<<<< HEAD
       val outputAttrNames = Array.tabulate(numAttrs)(i => inputColName + is + i)
+=======
+      val outputAttrNames = Array.tabulate(numAttrs)(_.toString)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
       val filtered = if (shouldDropLast) outputAttrNames.dropRight(1) else outputAttrNames
       val outputAttrs: Array[Attribute] =
         filtered.map(name => BinaryAttribute.defaultAttr.withName(name))

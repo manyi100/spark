@@ -17,10 +17,10 @@
 # limitations under the License.
 #
 
-# Go to the Spark project root directory
 FWDIR="$(cd "`dirname $0`"/..; pwd)"
 cd "$FWDIR"
 
+<<<<<<< HEAD
 # Clean up work directory and caches
 rm -rf ./work
 rm -rf ~/.ivy2/local/org.apache.spark
@@ -238,3 +238,6 @@ else
   echo "Ignoring SparkR tests as R was not found in PATH"
 fi
 
+=======
+exec python -u ./dev/run-tests.py "$@"
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

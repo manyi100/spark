@@ -18,6 +18,7 @@
 package org.apache.spark.deploy.history
 
 import java.util.NoSuchElementException
+import java.util.zip.ZipOutputStream
 import javax.servlet.http.{HttpServlet, HttpServletRequest, HttpServletResponse}
 
 import com.google.common.cache._
@@ -172,6 +173,16 @@ class HistoryServer(
   def getApplicationInfoList: Iterator[ApplicationInfo] = {
     getApplicationList().iterator.map(ApplicationsListResource.appHistoryInfoToPublicAppInfo)
   }
+<<<<<<< HEAD
+=======
+
+  override def writeEventLogs(
+      appId: String,
+      attemptId: Option[String],
+      zipStream: ZipOutputStream): Unit = {
+    provider.writeEventLogs(appId, attemptId, zipStream)
+  }
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
   /**
    * Returns the provider configuration to show in the listing page.
@@ -220,7 +231,7 @@ object HistoryServer extends Logging {
 
     val providerName = conf.getOption("spark.history.provider")
       .getOrElse(classOf[FsHistoryProvider].getName())
-    val provider = Class.forName(providerName)
+    val provider = Utils.classForName(providerName)
       .getConstructor(classOf[SparkConf])
       .newInstance(conf)
       .asInstanceOf[ApplicationHistoryProvider]

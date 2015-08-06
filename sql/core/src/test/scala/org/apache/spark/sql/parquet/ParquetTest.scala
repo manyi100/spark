@@ -22,6 +22,10 @@ import java.io.File
 import scala.reflect.ClassTag
 import scala.reflect.runtime.universe.TypeTag
 
+<<<<<<< HEAD:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
+=======
+import org.apache.spark.SparkFunSuite
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
 import org.apache.spark.sql.test.SQLTestUtils
 import org.apache.spark.sql.{DataFrame, SaveMode}
 
@@ -32,10 +36,14 @@ import org.apache.spark.sql.{DataFrame, SaveMode}
  * convenient to use tuples rather than special case classes when writing test cases/suites.
  * Especially, `Tuple1.apply` can be used to easily wrap a single type/value.
  */
+<<<<<<< HEAD:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
 private[sql] trait ParquetTest extends SQLTestUtils {
   import sqlContext.implicits.{localSeqToDataFrameHolder, rddToDataFrameHolder}
   import sqlContext.sparkContext
 
+=======
+private[sql] trait ParquetTest extends SQLTestUtils { this: SparkFunSuite =>
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
   /**
    * Writes `data` to a Parquet file, which is then passed to `f` and will be deleted after `f`
    * returns.
@@ -44,7 +52,11 @@ private[sql] trait ParquetTest extends SQLTestUtils {
       (data: Seq[T])
       (f: String => Unit): Unit = {
     withTempPath { file =>
+<<<<<<< HEAD:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
       sparkContext.parallelize(data).toDF().write.parquet(file.getCanonicalPath)
+=======
+      sqlContext.createDataFrame(data).write.parquet(file.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
       f(file.getCanonicalPath)
     }
   }
@@ -75,7 +87,11 @@ private[sql] trait ParquetTest extends SQLTestUtils {
 
   protected def makeParquetFile[T <: Product: ClassTag: TypeTag](
       data: Seq[T], path: File): Unit = {
+<<<<<<< HEAD:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
     data.toDF().write.mode(SaveMode.Overwrite).parquet(path.getCanonicalPath)
+=======
+    sqlContext.createDataFrame(data).write.mode(SaveMode.Overwrite).parquet(path.getCanonicalPath)
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c:sql/core/src/test/scala/org/apache/spark/sql/parquet/ParquetTest.scala
   }
 
   protected def makeParquetFile[T <: Product: ClassTag: TypeTag](

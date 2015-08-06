@@ -15,6 +15,10 @@
  * limitations under the License.
  */
 
+<<<<<<< HEAD
+=======
+// scalastyle:off println
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 package org.apache.spark.examples.ml
 
 import scala.collection.mutable
@@ -140,3 +144,7 @@ object LinearRegressionExample {
     sc.stop()
   }
 }
+<<<<<<< HEAD
+=======
+// scalastyle:on println
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c

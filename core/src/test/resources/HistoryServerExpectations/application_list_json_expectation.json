@@ -8,6 +8,25 @@
     "completed" : true
   } ]
 }, {
+<<<<<<< HEAD
+=======
+  "id" : "local-1430917381535",
+  "name" : "Spark shell",
+  "attempts" : [ {
+    "attemptId" : "2",
+    "startTime" : "2015-05-06T13:03:00.893GMT",
+    "endTime" : "2015-05-06T13:03:00.950GMT",
+    "sparkUser" : "irashid",
+    "completed" : true
+  }, {
+    "attemptId" : "1",
+    "startTime" : "2015-05-06T13:03:00.880GMT",
+    "endTime" : "2015-05-06T13:03:00.890GMT",
+    "sparkUser" : "irashid",
+    "completed" : true
+  } ]
+}, {
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   "id" : "local-1426533911241",
   "name" : "Spark shell",
   "attempts" : [ {

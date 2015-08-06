@@ -32,6 +32,7 @@ import org.apache.spark.mllib.util.MLUtils
  *
  * @param mu The mean vector of the distribution
  * @param sigma The covariance matrix of the distribution
+ * @since 1.3.0
  */
 @DeveloperApi
 class MultivariateGaussian (
@@ -60,12 +61,24 @@ class MultivariateGaussian (
    */
   private val (rootSigmaInv: DBM[Double], u: Double) = calculateCovarianceConstants
 
+<<<<<<< HEAD
   /** Returns density of this multivariate Gaussian at given point, x */
+=======
+  /** Returns density of this multivariate Gaussian at given point, x
+    * @since 1.3.0
+    */
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   def pdf(x: Vector): Double = {
     pdf(x.toBreeze)
   }
 
+<<<<<<< HEAD
   /** Returns the log-density of this multivariate Gaussian at given point, x */
+=======
+  /** Returns the log-density of this multivariate Gaussian at given point, x
+    * @since 1.3.0
+    */
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   def logpdf(x: Vector): Double = {
     logpdf(x.toBreeze)
   }

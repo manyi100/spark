@@ -21,10 +21,17 @@ from pyspark.ml.util import keyword_only
 from pyspark.ml.wrapper import JavaEstimator, JavaModel, JavaTransformer
 from pyspark.mllib.common import inherit_doc
 
+<<<<<<< HEAD
 __all__ = ['Binarizer', 'HashingTF', 'IDF', 'IDFModel', 'Normalizer', 'OneHotEncoder',
            'PolynomialExpansion', 'RegexTokenizer', 'StandardScaler', 'StandardScalerModel',
            'StringIndexer', 'StringIndexerModel', 'Tokenizer', 'VectorAssembler', 'VectorIndexer',
            'Word2Vec', 'Word2VecModel']
+=======
+__all__ = ['Binarizer', 'HashingTF', 'IDF', 'IDFModel', 'NGram', 'Normalizer', 'OneHotEncoder',
+           'PolynomialExpansion', 'RegexTokenizer', 'StandardScaler', 'StandardScalerModel',
+           'StringIndexer', 'StringIndexerModel', 'Tokenizer', 'VectorAssembler', 'VectorIndexer',
+           'Word2Vec', 'Word2VecModel', 'PCA', 'PCAModel', 'RFormula', 'RFormulaModel']
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 
 @inherit_doc
@@ -266,6 +273,78 @@ class IDFModel(JavaModel):
 
 
 @inherit_doc
+<<<<<<< HEAD
+=======
+@ignore_unicode_prefix
+class NGram(JavaTransformer, HasInputCol, HasOutputCol):
+    """
+    A feature transformer that converts the input array of strings into an array of n-grams. Null
+    values in the input array are ignored.
+    It returns an array of n-grams where each n-gram is represented by a space-separated string of
+    words.
+    When the input is empty, an empty array is returned.
+    When the input array length is less than n (number of elements per n-gram), no n-grams are
+    returned.
+
+    >>> df = sqlContext.createDataFrame([Row(inputTokens=["a", "b", "c", "d", "e"])])
+    >>> ngram = NGram(n=2, inputCol="inputTokens", outputCol="nGrams")
+    >>> ngram.transform(df).head()
+    Row(inputTokens=[u'a', u'b', u'c', u'd', u'e'], nGrams=[u'a b', u'b c', u'c d', u'd e'])
+    >>> # Change n-gram length
+    >>> ngram.setParams(n=4).transform(df).head()
+    Row(inputTokens=[u'a', u'b', u'c', u'd', u'e'], nGrams=[u'a b c d', u'b c d e'])
+    >>> # Temporarily modify output column.
+    >>> ngram.transform(df, {ngram.outputCol: "output"}).head()
+    Row(inputTokens=[u'a', u'b', u'c', u'd', u'e'], output=[u'a b c d', u'b c d e'])
+    >>> ngram.transform(df).head()
+    Row(inputTokens=[u'a', u'b', u'c', u'd', u'e'], nGrams=[u'a b c d', u'b c d e'])
+    >>> # Must use keyword arguments to specify params.
+    >>> ngram.setParams("text")
+    Traceback (most recent call last):
+        ...
+    TypeError: Method setParams forces keyword arguments.
+    """
+
+    # a placeholder to make it appear in the generated doc
+    n = Param(Params._dummy(), "n", "number of elements per n-gram (>=1)")
+
+    @keyword_only
+    def __init__(self, n=2, inputCol=None, outputCol=None):
+        """
+        __init__(self, n=2, inputCol=None, outputCol=None)
+        """
+        super(NGram, self).__init__()
+        self._java_obj = self._new_java_obj("org.apache.spark.ml.feature.NGram", self.uid)
+        self.n = Param(self, "n", "number of elements per n-gram (>=1)")
+        self._setDefault(n=2)
+        kwargs = self.__init__._input_kwargs
+        self.setParams(**kwargs)
+
+    @keyword_only
+    def setParams(self, n=2, inputCol=None, outputCol=None):
+        """
+        setParams(self, n=2, inputCol=None, outputCol=None)
+        Sets params for this NGram.
+        """
+        kwargs = self.setParams._input_kwargs
+        return self._set(**kwargs)
+
+    def setN(self, value):
+        """
+        Sets the value of :py:attr:`n`.
+        """
+        self._paramMap[self.n] = value
+        return self
+
+    def getN(self):
+        """
+        Gets the value of n or its default value.
+        """
+        return self.getOrDefault(self.n)
+
+
+@inherit_doc
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 class Normalizer(JavaTransformer, HasInputCol, HasOutputCol):
     """
      Normalize a vector to have unit norm using the given p-norm.
@@ -456,7 +535,11 @@ class RegexTokenizer(JavaTransformer, HasInputCol, HasOutputCol):
     """
     A regex based tokenizer that extracts tokens either by using the
     provided regex pattern (in Java dialect) to split the text
+<<<<<<< HEAD
     (default) or repeatedly matching the regex (if gaps is true).
+=======
+    (default) or repeatedly matching the regex (if gaps is false).
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     Optional parameters also allow filtering tokens using a minimal
     length.
     It returns an array of strings that can be empty.
@@ -558,6 +641,13 @@ class StandardScaler(JavaEstimator, HasInputCol, HasOutputCol):
     >>> df = sqlContext.createDataFrame([(Vectors.dense([0.0]),), (Vectors.dense([2.0]),)], ["a"])
     >>> standardScaler = StandardScaler(inputCol="a", outputCol="scaled")
     >>> model = standardScaler.fit(df)
+<<<<<<< HEAD
+=======
+    >>> model.mean
+    DenseVector([1.0])
+    >>> model.std
+    DenseVector([1.4142])
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     >>> model.transform(df).collect()[1].scaled
     DenseVector([1.4142])
     """
@@ -623,6 +713,23 @@ class StandardScalerModel(JavaModel):
     Model fitted by StandardScaler.
     """
 
+<<<<<<< HEAD
+=======
+    @property
+    def std(self):
+        """
+        Standard deviation of the StandardScalerModel.
+        """
+        return self._call_java("std")
+
+    @property
+    def mean(self):
+        """
+        Mean of the StandardScalerModel.
+        """
+        return self._call_java("mean")
+
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 
 @inherit_doc
 class StringIndexer(JavaEstimator, HasInputCol, HasOutputCol):
@@ -908,6 +1015,8 @@ class Word2Vec(JavaEstimator, HasStepSize, HasMaxIter, HasSeed, HasInputCol, Has
         setParams(self, minCount=5, numPartitions=1, stepSize=0.025, maxIter=1, seed=None, \
                  inputCol=None, outputCol=None)
         Sets params for this Word2Vec.
+<<<<<<< HEAD
+=======
         """
         kwargs = self.setParams._input_kwargs
         return self._set(**kwargs)
@@ -958,6 +1067,201 @@ class Word2Vec(JavaEstimator, HasStepSize, HasMaxIter, HasSeed, HasInputCol, Has
 class Word2VecModel(JavaModel):
     """
     Model fitted by Word2Vec.
+    """
+
+
+@inherit_doc
+class PCA(JavaEstimator, HasInputCol, HasOutputCol):
+    """
+    PCA trains a model to project vectors to a low-dimensional space using PCA.
+
+    >>> from pyspark.mllib.linalg import Vectors
+    >>> data = [(Vectors.sparse(5, [(1, 1.0), (3, 7.0)]),),
+    ...     (Vectors.dense([2.0, 0.0, 3.0, 4.0, 5.0]),),
+    ...     (Vectors.dense([4.0, 0.0, 0.0, 6.0, 7.0]),)]
+    >>> df = sqlContext.createDataFrame(data,["features"])
+    >>> pca = PCA(k=2, inputCol="features", outputCol="pca_features")
+    >>> model = pca.fit(df)
+    >>> model.transform(df).collect()[0].pca_features
+    DenseVector([1.648..., -4.013...])
+    """
+
+    # a placeholder to make it appear in the generated doc
+    k = Param(Params._dummy(), "k", "the number of principal components")
+
+    @keyword_only
+    def __init__(self, k=None, inputCol=None, outputCol=None):
+        """
+        __init__(self, k=None, inputCol=None, outputCol=None)
+        """
+        super(PCA, self).__init__()
+        self._java_obj = self._new_java_obj("org.apache.spark.ml.feature.PCA", self.uid)
+        self.k = Param(self, "k", "the number of principal components")
+        kwargs = self.__init__._input_kwargs
+        self.setParams(**kwargs)
+
+    @keyword_only
+    def setParams(self, k=None, inputCol=None, outputCol=None):
+        """
+        setParams(self, k=None, inputCol=None, outputCol=None)
+        Set params for this PCA.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
+        """
+        kwargs = self.setParams._input_kwargs
+        return self._set(**kwargs)
+
+<<<<<<< HEAD
+    def setVectorSize(self, value):
+        """
+        Sets the value of :py:attr:`vectorSize`.
+        """
+        self._paramMap[self.vectorSize] = value
+        return self
+
+    def getVectorSize(self):
+        """
+        Gets the value of vectorSize or its default value.
+        """
+        return self.getOrDefault(self.vectorSize)
+
+    def setNumPartitions(self, value):
+        """
+        Sets the value of :py:attr:`numPartitions`.
+        """
+        self._paramMap[self.numPartitions] = value
+        return self
+
+    def getNumPartitions(self):
+        """
+        Gets the value of numPartitions or its default value.
+        """
+        return self.getOrDefault(self.numPartitions)
+
+    def setMinCount(self, value):
+        """
+        Sets the value of :py:attr:`minCount`.
+        """
+        self._paramMap[self.minCount] = value
+        return self
+
+    def getMinCount(self):
+        """
+        Gets the value of minCount or its default value.
+        """
+        return self.getOrDefault(self.minCount)
+
+    def _create_model(self, java_model):
+        return Word2VecModel(java_model)
+
+
+class Word2VecModel(JavaModel):
+    """
+    Model fitted by Word2Vec.
+=======
+    def setK(self, value):
+        """
+        Sets the value of :py:attr:`k`.
+        """
+        self._paramMap[self.k] = value
+        return self
+
+    def getK(self):
+        """
+        Gets the value of k or its default value.
+        """
+        return self.getOrDefault(self.k)
+
+    def _create_model(self, java_model):
+        return PCAModel(java_model)
+
+
+class PCAModel(JavaModel):
+    """
+    Model fitted by PCA.
+    """
+
+
+@inherit_doc
+class RFormula(JavaEstimator, HasFeaturesCol, HasLabelCol):
+    """
+    .. note:: Experimental
+
+    Implements the transforms required for fitting a dataset against an
+    R model formula. Currently we support a limited subset of the R
+    operators, including '~', '+', '-', and '.'. Also see the R formula
+    docs:
+    http://stat.ethz.ch/R-manual/R-patched/library/stats/html/formula.html
+
+    >>> df = sqlContext.createDataFrame([
+    ...     (1.0, 1.0, "a"),
+    ...     (0.0, 2.0, "b"),
+    ...     (0.0, 0.0, "a")
+    ... ], ["y", "x", "s"])
+    >>> rf = RFormula(formula="y ~ x + s")
+    >>> rf.fit(df).transform(df).show()
+    +---+---+---+---------+-----+
+    |  y|  x|  s| features|label|
+    +---+---+---+---------+-----+
+    |1.0|1.0|  a|[1.0,1.0]|  1.0|
+    |0.0|2.0|  b|[2.0,0.0]|  0.0|
+    |0.0|0.0|  a|[0.0,1.0]|  0.0|
+    +---+---+---+---------+-----+
+    ...
+    >>> rf.fit(df, {rf.formula: "y ~ . - s"}).transform(df).show()
+    +---+---+---+--------+-----+
+    |  y|  x|  s|features|label|
+    +---+---+---+--------+-----+
+    |1.0|1.0|  a|   [1.0]|  1.0|
+    |0.0|2.0|  b|   [2.0]|  0.0|
+    |0.0|0.0|  a|   [0.0]|  0.0|
+    +---+---+---+--------+-----+
+    ...
+    """
+
+    # a placeholder to make it appear in the generated doc
+    formula = Param(Params._dummy(), "formula", "R model formula")
+
+    @keyword_only
+    def __init__(self, formula=None, featuresCol="features", labelCol="label"):
+        """
+        __init__(self, formula=None, featuresCol="features", labelCol="label")
+        """
+        super(RFormula, self).__init__()
+        self._java_obj = self._new_java_obj("org.apache.spark.ml.feature.RFormula", self.uid)
+        self.formula = Param(self, "formula", "R model formula")
+        kwargs = self.__init__._input_kwargs
+        self.setParams(**kwargs)
+
+    @keyword_only
+    def setParams(self, formula=None, featuresCol="features", labelCol="label"):
+        """
+        setParams(self, formula=None, featuresCol="features", labelCol="label")
+        Sets params for RFormula.
+        """
+        kwargs = self.setParams._input_kwargs
+        return self._set(**kwargs)
+
+    def setFormula(self, value):
+        """
+        Sets the value of :py:attr:`formula`.
+        """
+        self._paramMap[self.formula] = value
+        return self
+
+    def getFormula(self):
+        """
+        Gets the value of :py:attr:`formula`.
+        """
+        return self.getOrDefault(self.formula)
+
+    def _create_model(self, java_model):
+        return RFormulaModel(java_model)
+
+
+class RFormulaModel(JavaModel):
+    """
+    Model fitted by :py:class:`RFormula`.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     """
 
 

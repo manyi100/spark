@@ -166,6 +166,11 @@ object ParamValidators {
   def inArray[T](allowed: java.util.List[T]): T => Boolean = { (value: T) =>
     allowed.contains(value)
   }
+
+  /** Check that the array length is greater than lowerBound. */
+  def arrayLengthGt[T](lowerBound: Double): Array[T] => Boolean = { (value: Array[T]) =>
+    value.length > lowerBound
+  }
 }
 
 // specialize primitive-typed params because Java doesn't recognize scala.Double, scala.Int, ...
@@ -267,6 +272,7 @@ class BooleanParam(parent: String, name: String, doc: String) // No need for isV
 /**
  * :: DeveloperApi ::
  * Specialized version of [[Param[Array[String]]]] for Java.
+<<<<<<< HEAD
  */
 @DeveloperApi
 class StringArrayParam(parent: Params, name: String, doc: String, isValid: Array[String] => Boolean)
@@ -299,6 +305,56 @@ class DoubleArrayParam(parent: Params, name: String, doc: String, isValid: Array
  * :: Experimental ::
  * A param and its value.
  */
+=======
+ */
+@DeveloperApi
+class StringArrayParam(parent: Params, name: String, doc: String, isValid: Array[String] => Boolean)
+  extends Param[Array[String]](parent, name, doc, isValid) {
+
+  def this(parent: Params, name: String, doc: String) =
+    this(parent, name, doc, ParamValidators.alwaysTrue)
+
+  /** Creates a param pair with a [[java.util.List]] of values (for Java and Python). */
+  def w(value: java.util.List[String]): ParamPair[Array[String]] = w(value.asScala.toArray)
+}
+
+/**
+ * :: DeveloperApi ::
+ * Specialized version of [[Param[Array[Double]]]] for Java.
+ */
+@DeveloperApi
+class DoubleArrayParam(parent: Params, name: String, doc: String, isValid: Array[Double] => Boolean)
+  extends Param[Array[Double]](parent, name, doc, isValid) {
+
+  def this(parent: Params, name: String, doc: String) =
+    this(parent, name, doc, ParamValidators.alwaysTrue)
+
+  /** Creates a param pair with a [[java.util.List]] of values (for Java and Python). */
+  def w(value: java.util.List[java.lang.Double]): ParamPair[Array[Double]] =
+    w(value.asScala.map(_.asInstanceOf[Double]).toArray)
+}
+
+/**
+ * :: DeveloperApi ::
+ * Specialized version of [[Param[Array[Int]]]] for Java.
+ */
+@DeveloperApi
+class IntArrayParam(parent: Params, name: String, doc: String, isValid: Array[Int] => Boolean)
+  extends Param[Array[Int]](parent, name, doc, isValid) {
+
+  def this(parent: Params, name: String, doc: String) =
+    this(parent, name, doc, ParamValidators.alwaysTrue)
+
+  /** Creates a param pair with a [[java.util.List]] of values (for Java and Python). */
+  def w(value: java.util.List[java.lang.Integer]): ParamPair[Array[Int]] =
+    w(value.asScala.map(_.asInstanceOf[Int]).toArray)
+}
+
+/**
+ * :: Experimental ::
+ * A param and its value.
+ */
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
 @Experimental
 case class ParamPair[T](param: Param[T], value: T) {
   // This is *the* place Param.validate is called.  Whenever a parameter is specified, we should
@@ -341,9 +397,13 @@ trait Params extends Identifiable with Serializable {
    * those are checked during schema validation.
    */
   def validateParams(): Unit = {
+<<<<<<< HEAD
     params.filter(isDefined).foreach { param =>
       param.asInstanceOf[Param[Any]].validate($(param))
     }
+=======
+    // Do nothing by default.  Override to handle Param interactions.
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
   }
 
   /**
@@ -462,6 +522,13 @@ trait Params extends Identifiable with Serializable {
   /**
    * Sets default values for a list of params.
    *
+<<<<<<< HEAD
+=======
+   * Note: Java developers should use the single-parameter [[setDefault()]].
+   *       Annotating this with varargs can cause compilation failures due to a Scala compiler bug.
+   *       See SPARK-9268.
+   *
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
    * @param paramPairs  a list of param pairs that specify params and their default values to set
    *                    respectively. Make sure that the params are initialized before this method
    *                    gets called.

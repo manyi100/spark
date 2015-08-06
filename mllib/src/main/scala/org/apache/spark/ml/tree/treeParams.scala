@@ -17,9 +17,16 @@
 
 package org.apache.spark.ml.tree
 
+<<<<<<< HEAD:mllib/src/main/scala/org/apache/spark/ml/tree/treeParams.scala
 import org.apache.spark.ml.PredictorParams
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.param.shared.{HasMaxIter, HasSeed}
+=======
+import org.apache.spark.ml.classification.ClassifierParams
+import org.apache.spark.ml.PredictorParams
+import org.apache.spark.ml.param._
+import org.apache.spark.ml.param.shared.{HasMaxIter, HasSeed, HasThresholds}
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c:mllib/src/main/scala/org/apache/spark/ml/tree/treeParams.scala
 import org.apache.spark.mllib.tree.configuration.{Algo => OldAlgo, BoostingStrategy => OldBoostingStrategy, Strategy => OldStrategy}
 import org.apache.spark.mllib.tree.impurity.{Entropy => OldEntropy, Gini => OldGini, Impurity => OldImpurity, Variance => OldVariance}
 import org.apache.spark.mllib.tree.loss.{Loss => OldLoss}
@@ -162,7 +169,7 @@ private[ml] trait DecisionTreeParams extends PredictorParams {
       oldAlgo: OldAlgo.Algo,
       oldImpurity: OldImpurity,
       subsamplingRate: Double): OldStrategy = {
-    val strategy = OldStrategy.defaultStategy(oldAlgo)
+    val strategy = OldStrategy.defaultStrategy(oldAlgo)
     strategy.impurity = oldImpurity
     strategy.checkpointInterval = getCheckpointInterval
     strategy.maxBins = getMaxBins

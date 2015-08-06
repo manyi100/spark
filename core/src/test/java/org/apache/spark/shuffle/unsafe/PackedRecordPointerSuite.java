@@ -32,8 +32,13 @@ public class PackedRecordPointerSuite {
   public void heap() {
     final TaskMemoryManager memoryManager =
       new TaskMemoryManager(new ExecutorMemoryManager(MemoryAllocator.HEAP));
+<<<<<<< HEAD
     final MemoryBlock page0 = memoryManager.allocatePage(100);
     final MemoryBlock page1 = memoryManager.allocatePage(100);
+=======
+    final MemoryBlock page0 = memoryManager.allocatePage(128);
+    final MemoryBlock page1 = memoryManager.allocatePage(128);
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     final long addressInPage1 = memoryManager.encodePageNumberAndOffset(page1,
       page1.getBaseOffset() + 42);
     PackedRecordPointer packedPointer = new PackedRecordPointer();
@@ -50,8 +55,13 @@ public class PackedRecordPointerSuite {
   public void offHeap() {
     final TaskMemoryManager memoryManager =
       new TaskMemoryManager(new ExecutorMemoryManager(MemoryAllocator.UNSAFE));
+<<<<<<< HEAD
     final MemoryBlock page0 = memoryManager.allocatePage(100);
     final MemoryBlock page1 = memoryManager.allocatePage(100);
+=======
+    final MemoryBlock page0 = memoryManager.allocatePage(128);
+    final MemoryBlock page1 = memoryManager.allocatePage(128);
+>>>>>>> 4399b7b0903d830313ab7e69731c11d587ae567c
     final long addressInPage1 = memoryManager.encodePageNumberAndOffset(page1,
       page1.getBaseOffset() + 42);
     PackedRecordPointer packedPointer = new PackedRecordPointer();
